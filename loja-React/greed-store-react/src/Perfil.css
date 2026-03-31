@@ -1,0 +1,141 @@
+/* Perfil.css - Greed Store */
+
+/* ===== BANNER ===== */
+.banner-perfil {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: linear-gradient(45deg, #161b22, #30363d);
+    position: relative;
+    cursor: pointer;
+    border-bottom: 1px solid #30363d;
+}
+.banner-perfil img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+.banner-perfil.tem-imagem img {
+    display: block;
+}
+
+/* ===== FOTO DE PERFIL ===== */
+.perfil-avatar-container {
+    position: relative;
+    margin-top: -60px;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 50%;
+}
+.foto-perfil {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #0d1117; /* Cor de fundo do body para criar a borda falsa */
+    background-color: #161b22;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: #8b949e;
+    overflow: hidden;
+    position: relative;
+}
+.foto-perfil img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+.foto-perfil.tem-imagem img {
+    display: block;
+}
+.foto-perfil.tem-imagem span {
+    display: none;
+}
+
+/* ===== OVERLAY DE EDIÇÃO (Aparece no Hover) ===== */
+.edit-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    font-weight: bold;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    z-index: 10;
+    border-radius: inherit;
+}
+.perfil-avatar-container .edit-overlay {
+    border-radius: 50%;
+    font-size: 1.5rem;
+}
+.banner-perfil:hover .edit-overlay,
+.perfil-avatar-container:hover .edit-overlay {
+    opacity: 1;
+}
+
+/* ===== NOME EDITÁVEL ===== */
+.nome-editavel {
+    cursor: pointer;
+    transition: 0.2s;
+    padding: 5px 15px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    color: #ffffff;
+}
+.nome-editavel:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+.edit-icon {
+    font-size: 1.2rem;
+    opacity: 0;
+    transition: 0.2s;
+    color: #00d2ff;
+}
+.nome-editavel:hover .edit-icon {
+    opacity: 1;
+}
+
+/* ===== CARDS DOS DECKS ===== */
+.deck-card {
+    transition: 0.2s;
+}
+.deck-card:hover {
+    transform: translateY(-2px);
+    border-color: #00d2ff !important;
+    box-shadow: 0 4px 10px rgba(0, 210, 255, 0.15);
+}
+
+/* ===== FORMULÁRIOS E MODAIS ===== */
+.form-control {
+    background-color: #0d1117 !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+}
+.form-control:focus {
+    background-color: #0d1117 !important;
+    color: #ffffff !important;
+    border-color: #00d2ff !important;
+    box-shadow: 0 0 5px rgba(0, 210, 255, 0.5) !important;
+}
+
+.btn-close-white {
+    filter: invert(1) grayscale(1) brightness(1.5);
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 576px) {
+    .banner-perfil { height: 150px; }
+    .foto-perfil { width: 90px; height: 90px; margin-top: -45px; font-size: 2rem;}
+}

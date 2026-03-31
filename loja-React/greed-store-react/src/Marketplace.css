@@ -1,0 +1,324 @@
+/* Marketplace.css - Tema Escuro Completo (Sem o Body) */
+
+/* ==========================================================
+   1. ELIMINAR FUNDOS BRANCOS DE INPUTS E SELECTS (Global)
+   ========================================================== */
+.form-control, 
+.form-select {
+    background-color: #21262d !important; /* Mais escuro que os containers */
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+}
+
+.form-control:focus, 
+.form-select:focus {
+    background-color: #161b22 !important;
+    color: #ffffff !important;
+    border-color: #00d2ff !important;
+    box-shadow: 0 0 5px rgba(0, 210, 255, 0.5) !important;
+}
+
+.form-control::placeholder {
+    color: #8b949e !important;
+    opacity: 0.7;
+}
+
+/* Checkbox 'Ocultar Indisponíveis' */
+.form-check-input {
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
+}
+.form-check-input:checked {
+    background-color: #00d2ff !important;
+    border-color: #00d2ff !important;
+}
+
+/* ==========================================================
+   2. BARRA DE PESQUISA E PAINEL DE FILTROS
+   ========================================================== */
+.barra-pesquisa {
+    background: #161b22;
+    padding: 20px;
+    border-bottom: 1px solid #30363d;
+}
+
+.filtro-container {
+    background: #161b22;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+}
+
+.filtro-container label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #8b949e;
+    margin-top: 10px;
+}
+
+.filtro-container .text-info {
+    color: #00d2ff !important;
+}
+
+.filtro-container .row .form-control-sm {
+    margin-top: 5px;
+}
+
+.form-check-label.text-light {
+    color: #c9d1d9 !important;
+}
+
+/* ==========================================================
+   3. LISTA DE CARTAS (CARDS)
+   ========================================================== */
+.card, 
+.card-body {
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
+    transition: 0.2s;
+    position: relative;
+}
+
+.card:hover {
+    transform: scale(1.03);
+    border-color: #00d2ff !important;
+    box-shadow: 0 5px 15px rgba(0, 210, 255, 0.2);
+}
+
+.card img {
+    height: 280px;
+    object-fit: contain; 
+    padding: 10px;
+    background-color: #0d1117; 
+    border-bottom: 1px solid #30363d;
+}
+
+/* Botão Favoritar nas cartas */
+.favoritar-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #ffc107;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    z-index: 10;
+    transition: 0.2s;
+    color: transparent;
+    text-shadow: 0 0 0 #ffc107;
+    cursor: pointer;
+}
+
+.favoritar-btn:hover {
+    transform: scale(1.15);
+    background: rgba(0, 0, 0, 0.9);
+    box-shadow: 0 0 8px #ffc107;
+}
+
+/* Textos dentro das cartas */
+.card-text.fw-bold.text-white {
+    color: #ffffff !important;
+}
+
+.card-text.text-success {
+    color: #2ea043 !important;
+}
+
+.card-text span[style*="color: #20aeea"] {
+    color: #00d2ff !important; 
+}
+
+.card-text .text-secondary {
+    color: #8b949e !important;
+}
+
+/* ==========================================================
+   4. PAGINAÇÃO
+   ========================================================== */
+nav .d-flex {
+    padding-bottom: 50px;
+}
+
+.btn-outline-info {
+    color: #00d2ff;
+    border-color: #00d2ff;
+}
+
+.btn-outline-info:hover, 
+.btn-outline-info:active, 
+.btn-outline-info:focus {
+    background-color: #00d2ff;
+    color: #161b22;
+    border-color: #00d2ff;
+}
+
+.btn-outline-info:disabled {
+    color: #30363d;
+    border-color: #30363d;
+    background-color: transparent;
+}
+
+span.text-light {
+    color: #c9d1d9 !important;
+}
+
+/* ==========================================================
+   5. MODAL DETALHADO (TEMA ESCURO FORÇADO)
+   ========================================================== */
+.modal-content, 
+.modal-header, 
+.modal-body, 
+.modal-footer {
+    background-color: #161b22 !important;
+    color: #c9d1d9 !important;
+    border-color: #30363d !important;
+}
+
+/* Títulos do Modal */
+.modal-title, 
+.modal-body h3 {
+    background-color: transparent !important;
+    color: #ffffff !important;
+}
+
+.modal-body h5 {
+    color: #00d2ff !important;
+}
+
+.modal-body h5.border-bottom {
+    border-color: #30363d !important;
+}
+
+.modal-body p.text-light {
+    color: #c9d1d9 !important;
+}
+
+.btn-close-white {
+    filter: invert(1) grayscale(1) brightness(1.5);
+}
+
+.modal-body p[style*="color: #8b949e"] {
+    color: #8b949e !important;
+}
+
+/* Badges no Modal */
+.badge.bg-dark {
+    background-color: #0d1117 !important;
+    border-color: #30363d !important;
+    color: #c9d1d9 !important;
+}
+
+/* Lojas Afiliadas (Vendor Cards) */
+.vendor-list { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+}
+
+.vendor-card {
+    background: #21262d; 
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.2s;
+    text-decoration: none; 
+}
+
+.vendor-card:hover { 
+    border-color: #8b949e; 
+    background: #30363d; 
+}
+
+.vendor-name { 
+    font-weight: bold; 
+    font-size: 1rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    color: #c9d1d9; 
+}
+
+.vendor-price {
+    font-size: 1.15rem; 
+    font-weight: bold; 
+    color: #2ea043;
+    background: rgba(46, 160, 67, 0.1); 
+    padding: 4px 10px; 
+    border-radius: 6px;
+}
+
+.vendor-price.indisponivel { 
+    color: #8b949e; 
+    background: transparent; 
+    font-size: 0.9rem; 
+}
+
+/* Banner Informativo (CTA) */
+.modal-body div[style*="background: rgba(0, 210, 255, 0.1)"] {
+    background: rgba(0, 210, 255, 0.05) !important; 
+    border-color: #00d2ff !important;
+}
+
+.modal-body p[style*="color: #b0e0ff"] {
+    color: #c9d1d9 !important;
+}
+.modal-content {
+  overflow: visible;
+}
+/* ==========================================================
+   6. ZOOM DA CARTA
+   ========================================================== */
+.img-zoomable {
+    transition: all 0.3s ease-in-out;
+    cursor: zoom-in;
+    position: relative;
+    z-index: 1040;
+}
+
+.img-zoomable:hover {
+    transform: scale(1.03);
+}
+
+.img-zoomed {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important; 
+    max-height: 90vh !important; 
+    max-width: 95vw !important;  
+    width: auto !important;
+    height: auto !important;
+    z-index: 9999 !important; 
+    box-shadow: 0 20px 80px rgba(0,0,0,0.95) !important; 
+    cursor: zoom-out;
+    border-radius: 10px;
+    background-color: #0d1117; 
+}
+
+/* ==========================================================
+   7. UTILITÁRIOS E TEXTOS DE ESTADO
+   ========================================================== */
+.text-center.text-info,
+.text-center.text-warning {
+    background-color: transparent !important;
+}
+/* ==========================================================
+   8. OVERLAY PARA ZOOM
+   ========================================================== */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 9998;
+}
