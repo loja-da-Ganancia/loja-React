@@ -19,13 +19,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - working-directory: loja-React   # 👈 entra na pasta antes de tudo
+      - working-directory: greed-store-react
         run: npm install
-      - working-directory: loja-React   # 👈 aqui também
+      - working-directory: greed-store-react
         run: npm run build
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: loja-React/dist          # 👈 e aponta para a pasta certa
+          path: greed-store-react/dist
       - uses: actions/deploy-pages@v4
         id: deployment
