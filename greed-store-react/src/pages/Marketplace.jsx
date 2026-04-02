@@ -385,7 +385,6 @@ export default function Marketplace() {
                           {imagemZoom && (
                             <div className="overlay" onClick={() => setImagemZoom(false)} />
                           )}
-
                           <img
                             src={cartaSelecionada.card_images[0].image_url}
                             className={`img-fluid rounded border border-secondary ${imagemZoom ? 'img-zoomed' : ''}`}

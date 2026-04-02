@@ -11,6 +11,8 @@ import './Decks.css';
 import './Perfil.css';
 import './Admin.css';
 
+
+
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import Marketplace from './pages/Marketplace';
@@ -20,7 +22,9 @@ import Comunidade from './pages/Comunidade';
 import Contas from './pages/Contas';
 import Perfil from './pages/Perfil';
 import Admin from './pages/Admin';
-// css global
+import EsqueciSenhaPage from "./pages/EsqueciSenhaPage";
+import ResetSenha from "./pages/ResetSenha";
+
 
 
 function App() {
@@ -29,7 +33,7 @@ function App() {
             <Navbar />
 
             <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Home/>} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/decks" element={<Decks />} />
                 <Route path="/comunidade" element={<Comunidade />} />
@@ -37,6 +41,8 @@ function App() {
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/perfil" element={<Perfil />} />
                 <Route path="/contas" element={<Contas />} />
+                <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
+                <Route path="/reset" element={<ResetSenha />} />
             </Routes>
 
             <Footer />
