@@ -1,0 +1,47 @@
+/* Contas.css - Página de Login e Cadastro */
+
+.form-container {
+    max-width: 500px;
+    background-color: #161b22;
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid #30363d;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Modificação dos Inputs para acompanhar o padrão escuro */
+.form-container .form-control {
+    background-color: #0d1117 !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+}
+
+.form-container .form-control:focus {
+    background-color: #0d1117 !important;
+    color: #ffffff !important;
+    border-color: #00d2ff !important;
+    box-shadow: 0 0 5px rgba(0, 210, 255, 0.5) !important;
+}
+
+/* Customização das Abas */
+.nav-tabs {
+    border-bottom: 2px solid #30363d;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-radius: 8px 8px 0 0;
+    transition: 0.3s;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #ffffff !important;
+}
+
+/* Responsividade */
+@media (max-width: 576px) {
+    .form-container {
+        margin: 20px;
+        padding: 25px;
+    }
+}
