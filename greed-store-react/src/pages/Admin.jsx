@@ -1,98 +1,44 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// ==========================================================
-// CONSTANTES E HELPERS DE BANCO DE DADOS
-// ==========================================================
-const USERS_KEY = 'greedstore_users';
-const DECKS_KEY = 'greedstore_decks';
-const SESSION_KEY = 'greedstore_session';
+// IMPORTAÇÕES DO REDUX
+import { useSelector, useDispatch } from "react-redux";
+import { toggleUserRole, deleteUser } from "./userSlice";
 
-function getCurrentUser() {
-  const session = sessionStorage.getItem(SESSION_KEY);
-  return session ? JSON.parse(session) : null;
-}
+const DECKS_KEY = 'greedstore_decks';
 
 export default function Admin() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // ==========================================================
-  // ESTADOS DO PAINEL (Lazy Initialization)
-  // ==========================================================
-  const [usuarios, setUsuarios] = useState(() => {
-    return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-  });
+  // LEITURA DE DADOS GLOBAIS
+  const userLogado = useSelector((state) => state.user.currentUser);
+  const usuarios = useSelector((state) => state.user.allUsers);
+  
+  // Lê os decks do Redux (se existir), ou usa um fallback seguro para não quebrar a contagem
+  const todosOsDecks = useSelector((state) => state.decks?.items || JSON.parse(localStorage.getItem(DECKS_KEY)) || []);
 
-  const [estatisticas, setEstatisticas] = useState(() => {
-    const usersDB = JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-    const decksDB = JSON.parse(localStorage.getItem(DECKS_KEY)) || [];
-    
-    // Calcula o total de cartas somando as cartas de todos os decks
-    const totalCartas = decksDB.reduce((acumulador, deck) => {
-      return acumulador + (deck.cartas ? deck.cartas.length : 0);
-    }, 0);
-
-    return {
-      totalUsuarios: usersDB.length,
-      totalDecks: decksDB.length,
-      totalCartas: totalCartas
-    };
-  });
-
-  // ==========================================================
-  // LÓGICA DE DADOS E ESTATÍSTICAS
-  // ==========================================================
-  // Esta função agora só é chamada após uma ação do admin (ex: deletar usuário)
-  function carregarDados() {
-    const usersDB = JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-    const decksDB = JSON.parse(localStorage.getItem(DECKS_KEY)) || [];
-
-    const totalCartas = decksDB.reduce((acumulador, deck) => {
-      return acumulador + (deck.cartas ? deck.cartas.length : 0);
-    }, 0);
-
-    setUsuarios(usersDB);
-    setEstatisticas({
-      totalUsuarios: usersDB.length,
-      totalDecks: decksDB.length,
-      totalCartas: totalCartas
-    });
-  }
-
-  // ==========================================================
-  // INICIALIZAÇÃO E PROTEÇÃO DE ROTA (Apenas Admins)
-  // ==========================================================
+  // PROTEÇÃO DE ROTA
   useEffect(() => {
-    const userLogado = getCurrentUser();
-    
-    // Se não estiver logado ou não for admin, manda pra longe
     if (!userLogado || userLogado.role !== 'admin') {
-      window.alert('Acesso negado. Você não é administrador.');
+      window.alert('Acesso negado. Não é administrador.');
       navigate('/');
     }
-  }, [navigate]);
+  }, [userLogado, navigate]);
 
-  // ==========================================================
-  // AÇÕES DO ADMINISTRADOR
-  // ==========================================================
+  // ESTATÍSTICAS CALCULADAS AUTOMATICAMENTE
+  const totalUsuarios = usuarios.length;
+  const totalDecks = todosOsDecks.length;
+  const totalCartas = todosOsDecks.reduce((acumulador, deck) => acumulador + (deck.cartas ? deck.cartas.length : 0), 0);
+
+  // AÇÕES ENVIADAS PARA O REDUX
   function alternarPapelUsuario(username) {
-    let usersDB = JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-    const userIndex = usersDB.findIndex((u) => u.username === username);
-    
-    if (userIndex !== -1) {
-      // Se for o admin principal, impede de se rebaixar
-      if (username === 'admin') {
-        window.alert('O administrador principal não pode ter seu papel alterado.');
-        return;
-      }
-
-      // Alterna entre 'admin' e 'user'
-      const papelAtual = usersDB[userIndex].role;
-      usersDB[userIndex].role = papelAtual === 'admin' ? 'user' : 'admin';
-      
-      localStorage.setItem(USERS_KEY, JSON.stringify(usersDB));
-      carregarDados(); // Recarrega para atualizar a tabela na hora
+    if (username === 'admin') {
+      window.alert('O administrador principal não pode ter o seu papel alterado.');
+      return;
     }
+    // Dispara a ordem para a central do Redux
+    dispatch(toggleUserRole(username));
   }
 
   function deletarUsuario(username) {
@@ -100,34 +46,26 @@ export default function Admin() {
       window.alert('O administrador principal não pode ser excluído.');
       return;
     }
-
-    if (window.confirm(`Tem certeza que deseja excluir o usuário '${username}'? Todos os dados dele serão mantidos, mas a conta sumirá.`)) {
-      let usersDB = JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-      
-      // Filtra removendo o usuário
-      usersDB = usersDB.filter((u) => u.username !== username);
-      
-      localStorage.setItem(USERS_KEY, JSON.stringify(usersDB));
-      carregarDados();
+    if (window.confirm(`Tem certeza que deseja excluir o utilizador '${username}'?`)) {
+      // Dispara a ordem de exclusão
+      dispatch(deleteUser(username));
     }
   }
 
-  // ==========================================================
-  // RENDERIZAÇÃO
-  // ==========================================================
+  if (!userLogado || userLogado.role !== 'admin') return null;
+
   return (
     <div className="container mt-5 mb-5 flex-grow-1">
       <h2 className="mb-4 text-white border-bottom border-secondary pb-2 fw-bold">⚙️ Painel Administrativo</h2>
 
-      {/* CARDS DE ESTATÍSTICAS */}
       <div className="row g-4 mb-5">
         <div className="col-md-4">
           <div className="card text-white bg-primary h-100 admin-stat-card">
             <div className="card-header fw-bold border-secondary text-center" style={{backgroundColor: 'rgba(0,0,0,0.2)'}}>
-              Total de Usuários
+              Total de Utilizadores
             </div>
             <div className="card-body d-flex align-items-center justify-content-center">
-              <h2 className="card-title m-0 fw-bold display-4">{estatisticas.totalUsuarios}</h2>
+              <h2 className="card-title m-0 fw-bold display-4">{totalUsuarios}</h2>
             </div>
           </div>
         </div>
@@ -138,7 +76,7 @@ export default function Admin() {
               Total de Decks Criados
             </div>
             <div className="card-body d-flex align-items-center justify-content-center">
-              <h2 className="card-title m-0 fw-bold display-4">{estatisticas.totalDecks}</h2>
+              <h2 className="card-title m-0 fw-bold display-4">{totalDecks}</h2>
             </div>
           </div>
         </div>
@@ -149,20 +87,19 @@ export default function Admin() {
               Total de Cartas nos Decks
             </div>
             <div className="card-body d-flex align-items-center justify-content-center">
-              <h2 className="card-title m-0 fw-bold display-4">{estatisticas.totalCartas}</h2>
+              <h2 className="card-title m-0 fw-bold display-4">{totalCartas}</h2>
             </div>
           </div>
         </div>
       </div>
 
-      {/* TABELA DE USUÁRIOS */}
-      <h3 className="border-bottom border-secondary pb-2 mb-3 text-white">📋 Gerenciar Usuários</h3>
+      <h3 className="border-bottom border-secondary pb-2 mb-3 text-white">📋 Gerir Utilizadores</h3>
       
       <div className="table-responsive">
         <table className="table table-dark table-striped table-bordered align-middle table-hover">
           <thead className="table-active text-center">
             <tr>
-              <th scope="col" style={{width: '40%'}}>Usuário</th>
+              <th scope="col" style={{width: '40%'}}>Utilizador</th>
               <th scope="col" style={{width: '30%'}}>Papel (Role)</th>
               <th scope="col" style={{width: '30%'}}>Ações</th>
             </tr>
@@ -170,7 +107,7 @@ export default function Admin() {
           <tbody>
             {usuarios.length === 0 ? (
               <tr>
-                <td colSpan="3" className="text-center text-muted py-4">Nenhum usuário encontrado.</td>
+                <td colSpan="3" className="text-center text-muted py-4">Nenhum utilizador encontrado.</td>
               </tr>
             ) : (
               usuarios.map((user) => {
@@ -192,7 +129,7 @@ export default function Admin() {
                           className={`btn btn-sm fw-bold ${user.role === 'admin' ? 'btn-outline-secondary' : 'btn-warning text-dark'}`}
                           onClick={() => alternarPapelUsuario(user.username)}
                           disabled={isSuperAdmin}
-                          title={user.role === 'admin' ? 'Rebaixar para Usuário' : 'Promover a Admin'}
+                          title={user.role === 'admin' ? 'Rebaixar para Utilizador' : 'Promover a Admin'}
                         >
                           {user.role === 'admin' ? '↓ Rebaixar' : '↑ Promover'}
                         </button>
@@ -216,7 +153,7 @@ export default function Admin() {
       
       <div className="text-center mt-3">
         <p style={{fontSize: '0.85rem', color: '#8b949e'}}>
-          * O usuário "admin" base não pode ser rebaixado ou excluído por motivos de segurança do sistema.
+          * O utilizador "admin" base não pode ser rebaixado ou excluído por motivos de segurança do sistema.
         </p>
       </div>
     </div>

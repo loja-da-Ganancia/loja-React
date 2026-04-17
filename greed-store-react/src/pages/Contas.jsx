@@ -1,88 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// ==========================================================
-// FUNÇÕES AUXILIARES DE AUTENTICAÇÃO (Antigo auth.js)
-// ==========================================================
-const USERS_KEY = 'greedstore_users';
-const SESSION_KEY = 'greedstore_session';
+// IMPORTAÇÕES DO REDUX
+import { useSelector, useDispatch } from "react-redux";
+import { loginUser, registerUser } from "./userSlice";
 
-function obterUsuarios() {
-  const users = localStorage.getItem(USERS_KEY);
-  return users ? JSON.parse(users) : [];
-}
-
-function salvarUsuarios(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-function registrarUsuario(username, password) {
-  const users = obterUsuarios();
-
-  // Verifica se usuário já existe
-  const existe = users.find((u) => u.username === username);
-  if (existe) {
-    return { success: false, message: 'Nome de usuário já existe.' };
-  }
-
-  if (username.length < 3 || password.length < 3) {
-    return { success: false, message: 'Usuário e senha devem ter pelo menos 3 caracteres.' };
-  }
-
-  users.push({ username: username, password: password, role: 'user' });
-  salvarUsuarios(users);
-  return { success: true, message: 'Cadastro realizado com sucesso!' };
-}
-
-function realizarLogin(username, password) {
-  const users = obterUsuarios();
-  const user = users.find((u) => u.username === username && u.password === password);
-
-  if (!user) {
-    return { success: false, message: 'Usuário ou senha incorretos.' };
-  }
-
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-    username: user.username,
-    role: user.role,
-    loggedAt: Date.now()
-  }));
-
-  return { success: true, message: `Bem-vindo, ${user.username}!` };
-}
-
-// ==========================================================
-// COMPONENTE PRINCIPAL
-// ==========================================================
 export default function Contas() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // Estado para controlar qual aba está aberta ('login' ou 'cadastro')
+  // Puxa a lista de todos os usuários e quem está logado diretamente do Redux
+  const usuarios = useSelector((state) => state.user.allUsers);
+  const currentUser = useSelector((state) => state.user.currentUser);
+
+  // Estados locais para controlar a interface
   const [abaAtiva, setAbaAtiva] = useState('login');
-
-  // Estados dos formulários
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [mensagem, setMensagem] = useState(null);
 
-  // Estado para feedback na tela
-  const [mensagem, setMensagem] = useState(null); // formato: { texto: '', tipo: 'success' | 'danger' }
-
-  // Verifica se já está logado ao entrar na página
+  // Proteção: Se a central do Redux já tiver um usuário logado, pula direto pro perfil
   useEffect(() => {
-    // Garante que o admin base exista
-    let users = localStorage.getItem(USERS_KEY);
-    if (!users) {
-      salvarUsuarios([{ username: 'admin', password: 'admin', role: 'admin' }]);
-    }
-
-    // Se tiver sessão, manda pro perfil
-    if (sessionStorage.getItem(SESSION_KEY)) {
+    if (currentUser) {
       navigate('/perfil');
     }
-  }, [navigate]);
+  }, [currentUser, navigate]);
 
-  // Limpa os campos e mensagens sempre que trocar de aba
   function mudarAba(novaAba) {
     setAbaAtiva(novaAba);
     setUsername('');
@@ -91,26 +35,32 @@ export default function Contas() {
     setMensagem(null);
   }
 
-  // Função disparada ao enviar o formulário de Login
   function submeterLogin(e) {
-    e.preventDefault(); // Impede o recarregamento da página
+    e.preventDefault();
     setMensagem(null);
 
-    const resultado = realizarLogin(username, password);
+    // Varre a lista do Redux procurando o usuário e a senha
+    const user = usuarios.find((u) => u.username === username && u.password === password);
 
-    if (resultado.success) {
-      setMensagem({ texto: resultado.message, tipo: 'success' });
+    if (user) {
+      setMensagem({ texto: `Bem-vindo, ${user.username}!`, tipo: 'success' });
+      
+      // Dispara a ordem de login para o Redux salvar a sessão globalmente
+      dispatch(loginUser({
+        username: user.username,
+        role: user.role,
+        loggedAt: Date.now()
+      }));
 
-      // Aguarda 1 segundo para o usuário ler a mensagem e redireciona
+      // Aguarda 1 segundo e redireciona
       setTimeout(() => {
         navigate('/perfil');
       }, 1000);
     } else {
-      setMensagem({ texto: resultado.message, tipo: 'danger' });
+      setMensagem({ texto: 'Usuário ou senha incorretos.', tipo: 'danger' });
     }
   }
 
-  // Função disparada ao enviar o formulário de Cadastro
   function submeterCadastro(e) {
     e.preventDefault();
     setMensagem(null);
@@ -120,25 +70,32 @@ export default function Contas() {
       return;
     }
 
-    const resultado = registrarUsuario(username, password);
-
-    if (resultado.success) {
-      setMensagem({ texto: resultado.message + ' Agora faça login.', tipo: 'success' });
-      // Troca automaticamente para a aba de login para o usuário entrar
-      setTimeout(() => {
-        mudarAba('login');
-        setMensagem({ texto: 'Cadastro concluído! Faça seu login.', tipo: 'success' });
-      }, 1500);
-    } else {
-      setMensagem({ texto: resultado.message, tipo: 'danger' });
+    if (username.length < 3 || password.length < 3) {
+      setMensagem({ texto: 'Usuário e senha devem ter pelo menos 3 caracteres.', tipo: 'danger' });
+      return;
     }
+
+    // Verifica se já existe na lista do Redux
+    const existe = usuarios.find((u) => u.username === username);
+    if (existe) {
+      setMensagem({ texto: 'Nome de usuário já existe.', tipo: 'danger' });
+      return;
+    }
+
+    // Dispara a ordem para o Redux gravar o novo usuário no banco
+    dispatch(registerUser({ username: username, password: password, role: 'user' }));
+
+    setMensagem({ texto: 'Cadastro concluído! Agora faça login.', tipo: 'success' });
+    setTimeout(() => {
+      mudarAba('login');
+      setMensagem({ texto: 'Cadastro concluído! Faça seu login.', tipo: 'success' });
+    }, 1500);
   }
 
   return (
     <div className="container flex-grow-1 d-flex align-items-center justify-content-center mt-5 mb-5">
       <div className="form-container w-100">
 
-        {/* NAVEGAÇÃO DAS ABAS */}
         <ul className="nav nav-tabs mb-4" role="tablist">
           <li className="nav-item" role="presentation">
             <button
@@ -162,17 +119,13 @@ export default function Contas() {
           </li>
         </ul>
 
-        {/* MENSAGEM DE FEEDBACK GERAL */}
         {mensagem && (
           <div className={`alert alert-${mensagem.tipo} text-center fw-bold`} role="alert">
             {mensagem.texto}
           </div>
         )}
 
-        {/* CONTEÚDO DAS ABAS */}
         <div className="tab-content">
-
-          {/* FORMULÁRIO DE LOGIN */}
           {abaAtiva === 'login' && (
             <div className="tab-pane fade show active">
               <form onSubmit={submeterLogin}>
@@ -196,7 +149,7 @@ export default function Contas() {
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <button type="submit" className="btn btn-info w-100 fw-bold">Entrar</button>
+                <button type="submit" className="btn btn-info w-100 fw-bold text-dark">Entrar</button>
                 <div className="text-end mt-2">
                   <button
                     type="button"
@@ -210,7 +163,6 @@ export default function Contas() {
             </div>
           )}
 
-          {/* FORMULÁRIO DE CADASTRO */}
           {abaAtiva === 'cadastro' && (
             <div className="tab-pane fade show active">
               <form onSubmit={submeterCadastro}>

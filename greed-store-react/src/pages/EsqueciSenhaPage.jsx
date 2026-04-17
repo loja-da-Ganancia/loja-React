@@ -1,67 +1,149 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-
-const USERS_KEY = 'greedstore_users';
-
-function gerarToken() {
-    return Math.random().toString(36).substring(2) + Date.now();
-}
+// IMPORTAÇÕES DO REDUX
+import { useSelector, useDispatch } from "react-redux";
+import { resetUserPassword } from "./userSlice";
 
 export default function EsqueciSenhaPage() {
-    const [username, setUsername] = useState("");
-    const [mensagem, setMensagem] = useState("");
-    const [linkReset, setLinkReset] = useState("");
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-    function solicitarReset() {
-        console.log("Iniciando solicitação para:", username);
-        const users = JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-        const user = users.find(u => u.username.toLowerCase() === username.toLowerCase()); // Case-insensitive
+  // Puxa a lista inteira de usuários do Redux para verificação
+  const usuarios = useSelector((state) => state.user.allUsers);
 
-        if (!user) {
-            setMensagem("❌ Usuário não encontrado.");
-            setLinkReset(""); // Limpa o link anterior se der erro
-            return;
-        }
+  // Estados de controle da interface
+  const [etapa, setEtapa] = useState(1); // 1: Buscar usuário | 2: Digitar nova senha
+  const [username, setUsername] = useState('');
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [mensagem, setMensagem] = useState(null);
 
-        const token = gerarToken();
-        user.resetToken = token;
-        user.resetExpira = Date.now() + (10 * 60 * 1000);
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  // ETAPA 1: Verifica se a conta existe no sistema
+  function buscarUsuario(e) {
+    e.preventDefault();
+    setMensagem(null);
 
-        // Garanta que o link comece com barra
-        const link = `/reset?token=${token}`;
-        setMensagem("✅ Link gerado! (simulação de email)");
-        setLinkReset(link);
+    // Ignora maiúsculas e minúsculas na busca
+    const existe = usuarios.find((u) => u.username.toLowerCase() === username.toLowerCase());
+    if (existe) {
+      // Se achou, guarda o nome exato como está no banco e avança a tela
+      setUsername(existe.username); 
+      setEtapa(2); 
+    } else {
+      setMensagem({ texto: 'Usuário não encontrado no sistema.', tipo: 'danger' });
+    }
+  }
+
+  // ETAPA 2: Valida as senhas e envia para o Redux salvar
+  function salvarNovaSenha(e) {
+    e.preventDefault();
+    setMensagem(null);
+
+    if (novaSenha !== confirmarSenha) {
+      setMensagem({ texto: 'As senhas não coincidem.', tipo: 'danger' });
+      return;
     }
 
-    return (
-        <div className="container mt-5 text-white">
-            <h2>🔑 Recuperar Senha</h2>
+    if (novaSenha.length < 3) {
+      setMensagem({ texto: 'A senha deve ter pelo menos 3 caracteres.', tipo: 'danger' });
+      return;
+    }
 
-            <input
-                className="form-control mt-3"
-                placeholder="Digite seu usuário"
+    // Dispara a ordem para o Redux alterar a senha
+    dispatch(resetUserPassword({ username: username, newPassword: novaSenha }));
+    
+    setMensagem({ texto: 'Senha alterada com sucesso! Redirecionando...', tipo: 'success' });
+    
+    // Devolve o usuário para a tela de login
+    setTimeout(() => {
+      navigate('/contas');
+    }, 1500);
+  }
+
+  return (
+    <div className="container flex-grow-1 d-flex align-items-center justify-content-center mt-5 mb-5">
+      <div className="form-container w-100" style={{ maxWidth: '400px', backgroundColor: '#161b22', padding: '2rem', borderRadius: '8px', border: '1px solid #30363d' }}>
+        
+        <h3 className="text-white text-center mb-4 border-bottom border-secondary pb-2">
+          Recuperar Senha
+        </h3>
+
+        {mensagem && (
+          <div className={`alert alert-${mensagem.tipo} text-center fw-bold p-2`} role="alert">
+            {mensagem.texto}
+          </div>
+        )}
+
+        {/* TELA 1: BUSCAR O NOME */}
+        {etapa === 1 && (
+          <form onSubmit={buscarUsuario}>
+            <p className="text-light" style={{ fontSize: '0.9rem' }}>
+              Digite o seu nome de usuário para localizarmos a sua conta.
+            </p>
+            <div className="mb-4">
+              <label className="form-label text-light fw-bold">Nome de Usuário</label>
+              <input
+                type="text"
+                className="form-control"
+                required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-            />
-
-            <button className="btn btn-info mt-3" onClick={solicitarReset}>
-                Gerar Link
+              />
+            </div>
+            <button type="submit" className="btn btn-info w-100 fw-bold text-dark">
+              Buscar Conta
             </button>
+            <button 
+              type="button" 
+              className="btn btn-link text-secondary w-100 mt-2 text-decoration-none" 
+              onClick={() => navigate('/contas')}
+            >
+              Voltar para o Login
+            </button>
+          </form>
+        )}
 
-            {mensagem && <div className="alert alert-info mt-3">{mensagem}</div>}
+        {/* TELA 2: DIGITAR A NOVA SENHA */}
+        {etapa === 2 && (
+          <form onSubmit={salvarNovaSenha}>
+            <p className="text-success fw-bold text-center mb-3">
+              Conta localizada: {username}
+            </p>
+            <div className="mb-3">
+              <label className="form-label text-light fw-bold">Nova Senha</label>
+              <input
+                type="password"
+                className="form-control"
+                required
+                value={novaSenha}
+                onChange={(e) => setNovaSenha(e.target.value)}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="form-label text-light fw-bold">Confirmar Nova Senha</label>
+              <input
+                type="password"
+                className="form-control"
+                required
+                value={confirmarSenha}
+                onChange={(e) => setConfirmarSenha(e.target.value)}
+              />
+            </div>
+            <button type="submit" className="btn btn-success w-100 fw-bold">
+              Salvar Nova Senha
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-link text-secondary w-100 mt-2 text-decoration-none" 
+              onClick={() => setEtapa(1)}
+            >
+              Cancelar
+            </button>
+          </form>
+        )}
 
-            {linkReset && (
-                <div className="alert alert-warning mt-3">
-                    🔗 Link gerado com sucesso!<br />
-                    {/* O Link funciona como um <a> mas sem recarregar a página */}
-                    <Link to={linkReset} className="btn btn-warning mt-2">
-                        Ir para redefinição
-                    </Link>
-                </div>
-            )}
-        </div>
-    );
+      </div>
+    </div>
+  );
 }
