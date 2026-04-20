@@ -1,16 +1,31 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { adicionarFavoritoGlobal } from "../slices/favoritosSlice";
 
 const CARTAS_POR_PAGINA = 15;
 const AMAZON_AFFILIATE_TAG = '3153150d-20';
 
-// Função auxiliar estável, definida fora do componente
+// Função auxiliar encapsulada fora do componente para evitar recriação de escopo em renderizações sucessivas.
 function obterPreco(carta) {
   if (!carta.card_prices || !carta.card_prices[0]) return 0.00;
   return parseFloat(carta.card_prices[0].tcgplayer_price || 0);
 }
 
 export default function Marketplace() {
-  // Estados para controle de dados
+  // ====================================================
+  // 1. INTEGRAÇÃO DE ESTADO GLOBAL (Redux) E ROTEAMENTO
+  // ====================================================
+  const dispatch = useDispatch();
+  const navigate = useNavigate(); 
+  
+  // Extração reativa da lista de favoritos e do usuário atual do estado global
+  const favoritos = useSelector((state) => state.favoritos.items);
+  const currentUser = useSelector((state) => state.user.currentUser); 
+
+  // ====================================================
+  // 2. ESTADOS LOCAIS (Dados e Filtros)
+  // ====================================================
   const [todasAsCartas, setTodasAsCartas] = useState([]);
   const [cartasFiltradas, setCartasFiltradas] = useState([]);
   const [paginaAtual, setPaginaAtual] = useState(0);
@@ -18,7 +33,6 @@ export default function Marketplace() {
   const [mensagemErro, setMensagemErro] = useState("");
   const [mostrarToast, setMostrarToast] = useState(false);
 
-  // Estados para os filtros
   const [termoPesquisa, setTermoPesquisa] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
   const [filtroAtributo, setFiltroAtributo] = useState("");
@@ -29,16 +43,19 @@ export default function Marketplace() {
   const [filtroPrecoMax, setFiltroPrecoMax] = useState("");
   const [ocultarSemPreco, setOcultarSemPreco] = useState(true);
 
-  // Estado que controla apenas o menu no celular
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
 
-  // Estados para o Modal
+  // ====================================================
+  // 3. ESTADOS LOCAIS (Modal de Detalhes)
+  // ====================================================
   const [cartaSelecionada, setCartaSelecionada] = useState(null);
   const [nomeInglesModal, setNomeInglesModal] = useState("");
   const [carregandoModal, setCarregandoModal] = useState(false);
   const [imagemZoom, setImagemZoom] = useState(false);
 
-  // ==================== FUNÇÕES DE BUSCA E FILTRO ====================
+  // ====================================================
+  // 4. REQUISIÇÕES E LÓGICA DE NEGÓCIO
+  // ====================================================
   async function buscarCartasAPI() {
     setCarregando(true);
     setMensagemErro("");
@@ -54,6 +71,7 @@ export default function Marketplace() {
 
     try {
       const resposta = await fetch(url);
+      
       if (resposta.status === 400) {
         setMensagemErro("Nenhuma carta encontrada com esses filtros.");
         setTodasAsCartas([]);
@@ -69,7 +87,7 @@ export default function Marketplace() {
         setTodasAsCartas(dados.data);
       }
     } catch (erro) {
-      console.error("Erro na requisição:", erro);
+      console.error("Erro na request:", erro);
       setMensagemErro("Erro de conexão com o servidor.");
       setTodasAsCartas([]);
     }
@@ -85,41 +103,40 @@ export default function Marketplace() {
     const precoMin = parseFloat(filtroPrecoMin);
     const precoMax = parseFloat(filtroPrecoMax);
 
-    let filtradas = cartas.filter(function (carta) {
+    let filtradas = cartas.filter((carta) => {
       let preco = obterPreco(carta);
+      
       if (ocultarSemPreco && preco <= 0) return false;
       if (!isNaN(precoMin) && preco < precoMin) return false;
       if (!isNaN(precoMax) && preco > precoMax) return false;
+      
       return true;
     });
 
-    filtradas.sort(function (a, b) {
-      return obterPreco(a) - obterPreco(b);
-    });
-
+    filtradas.sort((a, b) => obterPreco(a) - obterPreco(b));
     setCartasFiltradas(filtradas);
     setPaginaAtual(0);
-  }, [filtroPrecoMin, filtroPrecoMax, ocultarSemPreco]); // obterPreco é estável, não precisa estar nas deps
+  }, [filtroPrecoMin, filtroPrecoMax, ocultarSemPreco]); 
 
-  // ==================== EFFECTS ====================
-  // Debounce para a pesquisa por digitação
-  useEffect(function () {
-    const timeoutPesquisa = setTimeout(function () {
+  // ====================================================
+  // 5. CICLO DE VIDA (Hooks)
+  // ====================================================
+  useEffect(() => {
+    const timeoutPesquisa = setTimeout(() => {
       buscarCartasAPI();
     }, 800);
 
-    return function () {
-      clearTimeout(timeoutPesquisa);
-    };
+    return () => clearTimeout(timeoutPesquisa);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [termoPesquisa]); // Dispara sempre que o termo de pesquisa mudar (busca automática)
+  }, [termoPesquisa]); 
 
-  // Aplica o filtro local de preços sempre que as cartas ou os filtros de preço mudarem
-  useEffect(function () {
+  useEffect(() => {
     aplicarFiltroDePrecoLocal(todasAsCartas);
   }, [todasAsCartas, aplicarFiltroDePrecoLocal]);
 
-  // ==================== FUNÇÕES DE INTERAÇÃO ====================
+  // ====================================================
+  // 6. FUNÇÕES INTERATIVAS
+  // ====================================================
   function resetarFiltros() {
     setTermoPesquisa("");
     setFiltroTipo("");
@@ -135,9 +152,9 @@ export default function Marketplace() {
 
   async function abrirModalDetalhes(carta) {
     setCartaSelecionada(carta);
-    setNomeInglesModal(carta.name);
+    setNomeInglesModal(carta.name); 
     setCarregandoModal(true);
-    setImagemZoom(false); // Reseta o zoom
+    setImagemZoom(false); 
 
     try {
       const url = "https://db.ygoprodeck.com/api/v7/cardinfo.php?id=" + carta.id;
@@ -147,7 +164,7 @@ export default function Marketplace() {
         setNomeInglesModal(data.data[0].name);
       }
     } catch (err) {
-      console.error("Erro ao buscar nome em inglês:", err);
+      console.error("Falha ao puxar nome gringo da carta:", err);
     }
     setCarregandoModal(false);
   }
@@ -158,46 +175,43 @@ export default function Marketplace() {
   }
 
   function adicionarFavorito(carta) {
-    let favoritos = JSON.parse(localStorage.getItem("favoritos")) || [];
-    let precoParaFavorito = obterPreco(carta).toFixed(2);
+    if (!currentUser) {
+      window.alert("Você precisa fazer login para favoritar cartas!");
+      navigate('/contas'); // CORREÇÃO: O navigate agora é usado para levar o utilizador ao login
+      return; 
+    }
 
+    let precoParaFavorito = obterPreco(carta).toFixed(2);
     let novaCarta = {
       nome: carta.name,
       imagem: carta.card_images[0].image_url,
       preco: precoParaFavorito
     };
 
-    let jaExiste = favoritos.some(function (f) {
-      return f.nome === novaCarta.nome;
-    });
+    // Validação de duplicidade vinculada ao usuário logado
+    let jaExiste = favoritos.some((f) => f.nome === novaCarta.nome && f.owner === currentUser.username);
 
     if (!jaExiste) {
-      favoritos.push(novaCarta);
-      localStorage.setItem("favoritos", JSON.stringify(favoritos));
-
+      dispatch(adicionarFavoritoGlobal({ carta: novaCarta, username: currentUser.username }));
+      
       setMostrarToast(true);
-      setTimeout(function () {
-        setMostrarToast(false);
-      }, 2000);
+      setTimeout(() => setMostrarToast(false), 2000);
     } else {
-      alert("Esta carta já está na sua lista de favoritos!");
+      window.alert("Esta carta já está na sua lista de favoritos!");
     }
   }
 
   function mudarPagina(direcao) {
-    setPaginaAtual(function (prev) {
-      return prev + direcao;
-    });
+    setPaginaAtual((prev) => prev + direcao);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Cálculos de Paginação
+  // Cálculos dinâmicos de paginação
   const inicioPaginacao = paginaAtual * CARTAS_POR_PAGINA;
   const fimPaginacao = inicioPaginacao + CARTAS_POR_PAGINA;
   const cartasDestaPagina = cartasFiltradas.slice(inicioPaginacao, fimPaginacao);
   const totalPaginas = Math.ceil(cartasFiltradas.length / CARTAS_POR_PAGINA);
 
-  // Helpers de Renderização
   function formatarPrecoModal(valor, simbolo = "US$") {
     let valFloat = parseFloat(valor || 0);
     if (valFloat > 0) {
@@ -206,9 +220,12 @@ export default function Marketplace() {
     return <span className="vendor-price indisponivel">Fora de estoque</span>;
   }
 
+  // ====================================================
+  // 7. RENDERIZAÇÃO DA INTERFACE
+  // ====================================================
   return (
     <div>
-      {/* BARRA DE PESQUISA */}
+      {/* INPUT PRINCIPAL */}
       <div className="barra-pesquisa">
         <div className="container">
           <div className="input-group input-group-lg">
@@ -217,15 +234,15 @@ export default function Marketplace() {
               className="form-control"
               placeholder="Buscar carta pelo nome..."
               value={termoPesquisa}
-              onChange={function (e) { setTermoPesquisa(e.target.value); }}
+              onChange={(e) => setTermoPesquisa(e.target.value)}
             />
             <button className="btn btn-info fw-bold" onClick={buscarCartasAPI}>Pesquisar</button>
           </div>
-          {/* BOTÃO DO CELULAR ATUALIZADO (Sem os data-bs e usando o estado onClick) */}
+          {/* Controle do Menu Lateral Responsivo */}
           <button
             className="btn btn-outline-info w-100 mt-3 d-lg-none"
             type="button"
-            onClick={function () { setFiltrosAbertos(!filtrosAbertos); }}
+            onClick={() => setFiltrosAbertos(!filtrosAbertos)}
           >
             {filtrosAbertos ? "✖ Esconder Filtros Avançados" : "⚙️ Mostrar Filtros Avançados"}
           </button>
@@ -234,15 +251,15 @@ export default function Marketplace() {
 
       <div className="container mt-4">
         <div className="row g-4">
-          {/* ASIDE - FILTROS */}
+          
+          {/* SIDEBAR DE FILTROS */}
           <aside className="col-lg-3">
-            {/* DIV DOS FILTROS ATUALIZADA (Adiciona o 'show' no celular se o botão for clicado, mas no PC (d-lg-block) fica sempre aberto) */}
             <div className={`collapse d-lg-block ${filtrosAbertos ? 'show' : ''}`} id="painelFiltros">
               <div className="filtro-container">
                 <h5 className="text-white border-bottom border-secondary pb-2 mb-3">Filtros</h5>
 
                 <label>Tipo de Carta</label>
-                <select className="form-select form-select-sm" value={filtroTipo} onChange={function (e) { setFiltroTipo(e.target.value); }}>
+                <select className="form-select form-select-sm" value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
                   <option value="">Todos</option>
                   <option value="Normal Monster">Monstro Normal</option>
                   <option value="Effect Monster">Monstro de Efeito</option>
@@ -255,7 +272,7 @@ export default function Marketplace() {
                 </select>
 
                 <label>Atributo</label>
-                <select className="form-select form-select-sm" value={filtroAtributo} onChange={function (e) { setFiltroAtributo(e.target.value); }}>
+                <select className="form-select form-select-sm" value={filtroAtributo} onChange={(e) => setFiltroAtributo(e.target.value)}>
                   <option value="">Todos</option>
                   <option value="DARK">DARK (Trevas)</option>
                   <option value="LIGHT">LIGHT (Luz)</option>
@@ -267,31 +284,31 @@ export default function Marketplace() {
                 </select>
 
                 <label>Nível / Rank</label>
-                <input type="number" className="form-control form-control-sm" min="1" max="12" placeholder="Ex: 4" value={filtroNivel} onChange={function (e) { setFiltroNivel(e.target.value); }} />
+                <input type="number" className="form-control form-control-sm" min="1" max="12" placeholder="Ex: 4" value={filtroNivel} onChange={(e) => setFiltroNivel(e.target.value)} />
 
                 <div className="row mt-2">
                   <div className="col-6">
                     <label>ATK (Exato)</label>
-                    <input type="number" className="form-control form-control-sm" placeholder="ATK" value={filtroAtk} onChange={function (e) { setFiltroAtk(e.target.value); }} />
+                    <input type="number" className="form-control form-control-sm" placeholder="ATK" value={filtroAtk} onChange={(e) => setFiltroAtk(e.target.value)} />
                   </div>
                   <div className="col-6">
                     <label>DEF (Exato)</label>
-                    <input type="number" className="form-control form-control-sm" placeholder="DEF" value={filtroDef} onChange={function (e) { setFiltroDef(e.target.value); }} />
+                    <input type="number" className="form-control form-control-sm" placeholder="DEF" value={filtroDef} onChange={(e) => setFiltroDef(e.target.value)} />
                   </div>
                 </div>
 
                 <label className="mt-3 text-info">Faixa de Preço (US$)</label>
                 <div className="row">
                   <div className="col-6">
-                    <input type="number" className="form-control form-control-sm" placeholder="Min" step="0.50" value={filtroPrecoMin} onChange={function (e) { setFiltroPrecoMin(e.target.value); }} />
+                    <input type="number" className="form-control form-control-sm" placeholder="Min" step="0.50" value={filtroPrecoMin} onChange={(e) => setFiltroPrecoMin(e.target.value)} />
                   </div>
                   <div className="col-6">
-                    <input type="number" className="form-control form-control-sm" placeholder="Max" step="0.50" value={filtroPrecoMax} onChange={function (e) { setFiltroPrecoMax(e.target.value); }} />
+                    <input type="number" className="form-control form-control-sm" placeholder="Max" step="0.50" value={filtroPrecoMax} onChange={(e) => setFiltroPrecoMax(e.target.value)} />
                   </div>
                 </div>
 
                 <div className="form-check mt-3">
-                  <input className="form-check-input" type="checkbox" id="filtroOcultarSemPreco" checked={ocultarSemPreco} onChange={function (e) { setOcultarSemPreco(e.target.checked); }} />
+                  <input className="form-check-input" type="checkbox" id="filtroOcultarSemPreco" checked={ocultarSemPreco} onChange={(e) => setOcultarSemPreco(e.target.checked)} />
                   <label className="form-check-label text-light" htmlFor="filtroOcultarSemPreco" style={{ marginTop: 0 }}>
                     Ocultar Indisponíveis
                   </label>
@@ -303,7 +320,7 @@ export default function Marketplace() {
             </div>
           </aside>
 
-          {/* MAIN - LISTA DE CARTAS */}
+          {/* LISTAGEM DE CARTAS */}
           <main className="col-lg-9">
             <div className="row g-4">
               {carregando && (
@@ -314,11 +331,12 @@ export default function Marketplace() {
                 <h4 className='text-center w-100 text-warning mt-5'>{mensagemErro}</h4>
               )}
 
+              {/* Componente condicional que alerta a ausência de correspondência após filtragem client-side */}
               {!carregando && !mensagemErro && cartasFiltradas.length === 0 && todasAsCartas.length > 0 && (
                 <h4 className='text-center w-100 text-warning mt-5'>Nenhuma carta atende aos filtros de preço solicitados.</h4>
               )}
 
-              {!carregando && cartasDestaPagina.map(function (carta) {
+              {!carregando && cartasDestaPagina.map((carta) => {
                 let precoRaw = obterPreco(carta);
                 return (
                   <div className="col-12 col-sm-6 col-md-4 mb-4" key={carta.id}>
@@ -326,11 +344,11 @@ export default function Marketplace() {
                       <button
                         className="favoritar-btn"
                         title="Adicionar aos Favoritos"
-                        onClick={function (e) { e.stopPropagation(); adicionarFavorito(carta); }}
+                        onClick={(e) => { e.stopPropagation(); adicionarFavorito(carta); }}
                       >
                         ⭐
                       </button>
-                      <div onClick={function () { abrirModalDetalhes(carta); }} style={{ cursor: 'pointer' }}>
+                      <div onClick={() => abrirModalDetalhes(carta)} style={{ cursor: 'pointer' }}>
                         <img src={carta.card_images[0].image_url} className="card-img-top w-100" alt={carta.name} loading="lazy" />
                         <div className="card-body text-center d-flex flex-column justify-content-between pb-3">
                           <div>
@@ -348,13 +366,13 @@ export default function Marketplace() {
               })}
             </div>
 
-            {/* PAGINAÇÃO */}
+            {/* CONTROLES DE PAGINAÇÃO */}
             {!carregando && totalPaginas > 1 && (
               <nav className="mt-5 mb-5">
                 <div className="d-flex justify-content-center align-items-center gap-3">
-                  <button className="btn btn-outline-info" disabled={paginaAtual === 0} onClick={function () { mudarPagina(-1); }}>⮜ Anterior</button>
+                  <button className="btn btn-outline-info" disabled={paginaAtual === 0} onClick={() => mudarPagina(-1)}>⮜ Anterior</button>
                   <span className="fw-bold text-light">Página {paginaAtual + 1} de {totalPaginas}</span>
-                  <button className="btn btn-outline-info" disabled={paginaAtual >= totalPaginas - 1} onClick={function () { mudarPagina(1); }}>Próxima ⮞</button>
+                  <button className="btn btn-outline-info" disabled={paginaAtual >= totalPaginas - 1} onClick={() => mudarPagina(1)}>Próxima ⮞</button>
                 </div>
               </nav>
             )}
@@ -362,16 +380,36 @@ export default function Marketplace() {
         </div>
       </div>
 
-      {/* MODAL DETALHES DA CARTA (Renderização Condicional Pura React) */}
+      {/* MODAL DETALHES */}
       {cartaSelecionada && (
         <>
           <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1" onClick={fecharModal}>
-            <div className="modal-dialog modal-lg" onClick={function (e) { e.stopPropagation(); }}>
+            <div className="modal-dialog modal-lg" onClick={(e) => e.stopPropagation()}>
               <div className="modal-content">
-                <div className="modal-header">
+                
+                <div className="modal-header border-secondary">
                   <h5 className="modal-title text-white">Detalhes da Carta</h5>
-                  <button type="button" className="btn-close btn-close-white" onClick={fecharModal}></button>
+                  
+                  <button 
+                    type="button"
+                    className="ms-auto" 
+                    onClick={fecharModal}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'white',
+                      fontSize: '1.8rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      lineHeight: '1',
+                      padding: '0 10px'
+                    }}
+                    aria-label="Fechar"
+                  >
+                    &times;
+                  </button>
                 </div>
+                
                 <div className="modal-body">
                   {carregandoModal ? (
                     <div className="text-center py-5">
@@ -443,7 +481,6 @@ export default function Marketplace() {
                               {formatarPrecoModal(cartaSelecionada.card_prices?.[0]?.coolstuffinc_price)}
                             </div>
                           </a>
-
                         </div>
 
                         <div className="text-center mt-3 mb-4 p-2 rounded" style={{ background: 'rgba(0, 210, 255, 0.1)', border: '1px solid #00d2ff', borderRadius: '8px' }}>
@@ -464,12 +501,11 @@ export default function Marketplace() {
               </div>
             </div>
           </div>
-          {/* Fundo escuro do Modal */}
           <div className="modal-backdrop fade show"></div>
         </>
       )}
 
-      {/* TOAST MENSAGEM */}
+      {/* COMPONENTE DE AVISO (TOAST) EFÊMERO LOCAL */}
       <div style={{
         position: 'fixed',
         top: '20px',

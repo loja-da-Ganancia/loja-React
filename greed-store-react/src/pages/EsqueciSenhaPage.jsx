@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 // IMPORTAÇÕES DO REDUX
 import { useSelector, useDispatch } from "react-redux";
-import { resetUserPassword } from "./userSlice";
+import { resetUserPassword } from "../slices/userSlice";
 
 export default function EsqueciSenhaPage() {
   const navigate = useNavigate();

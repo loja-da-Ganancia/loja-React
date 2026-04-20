@@ -13,7 +13,7 @@ import { useSelector, useDispatch } from "react-redux";
  * updateUser e logoutUser são as funções (actions) definidas no Slice do Redux
  * que contêm a lógica de como o estado deve ser alterado.
  */
-import { updateUser, logoutUser } from "./userSlice"; 
+import { updateUser, logoutUser } from "../slices/userSlice"; 
 
 export default function Perfil() {
   const navigate = useNavigate();
