@@ -12,11 +12,11 @@ import { store } from './store';
 // componentes
 import Navbar from './components/Navbar';
 
-import './css/comunidade.css';
-import './css/marketplace.css';
-import './css/decks.css';
-import './css/perfil.css';
-import './css/admin.css';
+import './css/Comunidade.css';
+import './css/Marketplace.css';
+import './css/Decks.css';
+import './css/Perfil.css';
+import './css/Admin.css';
 
 
 import Footer from './components/Footer';
