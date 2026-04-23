@@ -1,13 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 
+// Importação dos módulos (slices)
 import userReducer from './slices/userSlice'; 
 import postReducer from './slices/postSlice';
 import uiReducer from './slices/uiSlice';
 import searchReducer from './slices/searchSlice';
 import decksReducer from './slices/decksSlice';
-
-// Nova importação
 import favoritosReducer from './slices/favoritosSlice';
+
+// Nova importação para o rastreamento de afiliados
+import affiliatesReducer from './slices/affiliateSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,7 +18,9 @@ export const store = configureStore({
     ui: uiReducer,
     search: searchReducer,
     decks: decksReducer,
-    // Acoplamento da gaveta de favoritos
     favoritos: favoritosReducer,
+    
+    // Acoplamento da gaveta de monitoramento de afiliados
+    affiliates: affiliatesReducer,
   },
 });

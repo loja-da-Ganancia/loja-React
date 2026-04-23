@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { adicionarFavoritoGlobal } from "../slices/favoritosSlice";
+import { useAffiliateTracking } from "../hooks/userAffiliateTracking"; // <-- Importação do novo Hook
 
 const CARTAS_POR_PAGINA = 15;
 const AMAZON_AFFILIATE_TAG = '3153150d-20';
@@ -19,9 +20,12 @@ export default function Marketplace() {
   const dispatch = useDispatch();
   const navigate = useNavigate(); 
   
-  // Extração reativa da lista de favoritos e do usuário atual do estado global
+  // Extração reativa da lista de favoritos e do utilizador atual do estado global
   const favoritos = useSelector((state) => state.favoritos.items);
   const currentUser = useSelector((state) => state.user.currentUser); 
+
+  // Inicialização do sistema de rastreamento de afiliados
+  const { registrarClique } = useAffiliateTracking();
 
   // ====================================================
   // 2. ESTADOS LOCAIS (Dados e Filtros)
@@ -54,8 +58,18 @@ export default function Marketplace() {
   const [imagemZoom, setImagemZoom] = useState(false);
 
   // ====================================================
-  // 4. REQUISIÇÕES E LÓGICA DE NEGÓCIO
+  // 4. REQUISIÇÕES, LÓGICA DE NEGÓCIO E AFILIADOS
   // ====================================================
+  
+  /**
+   * Regista o clique na store global e abre o site parceiro.
+   */
+  const abrirAfiliada = (url, afiliada, nomeCarta) => {
+    const nomeUsuario = currentUser ? currentUser.username : 'Anônimo';
+    registrarClique(afiliada, nomeCarta, nomeUsuario);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   async function buscarCartasAPI() {
     setCarregando(true);
     setMensagemErro("");
@@ -73,7 +87,7 @@ export default function Marketplace() {
       const resposta = await fetch(url);
       
       if (resposta.status === 400) {
-        setMensagemErro("Nenhuma carta encontrada com esses filtros.");
+        setMensagemErro("Nenhuma carta encontrada com estes filtros.");
         setTodasAsCartas([]);
         setCarregando(false);
         return;
@@ -164,7 +178,7 @@ export default function Marketplace() {
         setNomeInglesModal(data.data[0].name);
       }
     } catch (err) {
-      console.error("Falha ao puxar nome gringo da carta:", err);
+      console.error("Falha ao obter o nome internacional da carta:", err);
     }
     setCarregandoModal(false);
   }
@@ -176,8 +190,8 @@ export default function Marketplace() {
 
   function adicionarFavorito(carta) {
     if (!currentUser) {
-      window.alert("Você precisa fazer login para favoritar cartas!");
-      navigate('/contas'); // CORREÇÃO: O navigate agora é usado para levar o utilizador ao login
+      window.alert("Precisa de fazer login para favoritar cartas!");
+      navigate('/contas'); 
       return; 
     }
 
@@ -188,12 +202,10 @@ export default function Marketplace() {
       preco: precoParaFavorito
     };
 
-    // Validação de duplicidade vinculada ao usuário logado
     let jaExiste = favoritos.some((f) => f.nome === novaCarta.nome && f.owner === currentUser.username);
 
     if (!jaExiste) {
       dispatch(adicionarFavoritoGlobal({ carta: novaCarta, username: currentUser.username }));
-      
       setMostrarToast(true);
       setTimeout(() => setMostrarToast(false), 2000);
     } else {
@@ -206,7 +218,6 @@ export default function Marketplace() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Cálculos dinâmicos de paginação
   const inicioPaginacao = paginaAtual * CARTAS_POR_PAGINA;
   const fimPaginacao = inicioPaginacao + CARTAS_POR_PAGINA;
   const cartasDestaPagina = cartasFiltradas.slice(inicioPaginacao, fimPaginacao);
@@ -225,7 +236,7 @@ export default function Marketplace() {
   // ====================================================
   return (
     <div>
-      {/* INPUT PRINCIPAL */}
+      {/* BARRA DE PESQUISA */}
       <div className="barra-pesquisa">
         <div className="container">
           <div className="input-group input-group-lg">
@@ -238,7 +249,6 @@ export default function Marketplace() {
             />
             <button className="btn btn-info fw-bold" onClick={buscarCartasAPI}>Pesquisar</button>
           </div>
-          {/* Controle do Menu Lateral Responsivo */}
           <button
             className="btn btn-outline-info w-100 mt-3 d-lg-none"
             type="button"
@@ -324,14 +334,13 @@ export default function Marketplace() {
           <main className="col-lg-9">
             <div className="row g-4">
               {carregando && (
-                <h4 className='text-center w-100 text-info mt-5'>Buscando no banco de dados...</h4>
+                <h4 className='text-center w-100 text-info mt-5'>A procurar na base de dados...</h4>
               )}
 
               {!carregando && mensagemErro && (
                 <h4 className='text-center w-100 text-warning mt-5'>{mensagemErro}</h4>
               )}
 
-              {/* Componente condicional que alerta a ausência de correspondência após filtragem client-side */}
               {!carregando && !mensagemErro && cartasFiltradas.length === 0 && todasAsCartas.length > 0 && (
                 <h4 className='text-center w-100 text-warning mt-5'>Nenhuma carta atende aos filtros de preço solicitados.</h4>
               )}
@@ -389,21 +398,9 @@ export default function Marketplace() {
                 
                 <div className="modal-header border-secondary">
                   <h5 className="modal-title text-white">Detalhes da Carta</h5>
-                  
                   <button 
-                    type="button"
-                    className="ms-auto" 
-                    onClick={fecharModal}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: 'white',
-                      fontSize: '1.8rem',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      lineHeight: '1',
-                      padding: '0 10px'
-                    }}
+                    type="button" className="ms-auto" onClick={fecharModal}
+                    style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '1.8rem', fontWeight: 'bold', cursor: 'pointer', lineHeight: '1', padding: '0 10px' }}
                     aria-label="Fechar"
                   >
                     &times;
@@ -414,25 +411,18 @@ export default function Marketplace() {
                   {carregandoModal ? (
                     <div className="text-center py-5">
                       <div className="spinner-border text-info" role="status"></div>
-                      <p className="mt-3">Carregando informações da carta...</p>
+                      <p className="mt-3">A carregar informações da carta...</p>
                     </div>
                   ) : (
                     <div className="row">
                       <div className="col-md-5 text-center mb-4">
                         <div style={{ position: 'static' }}>
-                          {imagemZoom && (
-                            <div className="overlay" onClick={() => setImagemZoom(false)} />
-                          )}
+                          {imagemZoom && <div className="overlay" onClick={() => setImagemZoom(false)} />}
                           <img
                             src={cartaSelecionada.card_images[0].image_url}
                             className={`img-fluid rounded border border-secondary ${imagemZoom ? 'img-zoomed' : ''}`}
                             alt={cartaSelecionada.name}
-                            style={{
-                              boxShadow: '0 4px 15px rgba(0,0,0,0.5)',
-                              maxHeight: '400px',
-                              objectFit: 'contain',
-                              cursor: 'pointer'
-                            }}
+                            style={{ boxShadow: '0 4px 15px rgba(0,0,0,0.5)', maxHeight: '400px', objectFit: 'contain', cursor: 'pointer' }}
                             title="Clique para dar Zoom"
                             onClick={() => setImagemZoom(!imagemZoom)}
                           />
@@ -451,44 +441,49 @@ export default function Marketplace() {
 
                         <h5 className="text-info fw-bold mb-3">🛒 Comparar Ofertas</h5>
                         <div className="vendor-list mb-4">
-                          <a href={`https://www.tcgplayer.com/search/yugioh/product?q=${encodeURIComponent(nomeInglesModal)}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                          {/* Integramos o rastreamento Redux em cada link das lojas parceiras */}
+                          <div onClick={() => abrirAfiliada(`https://www.tcgplayer.com/search/yugioh/product?q=${encodeURIComponent(nomeInglesModal)}`, 'TCGPlayer', cartaSelecionada.name)} style={{ cursor: 'pointer' }}>
                             <div className="vendor-card">
                               <div className="vendor-name"><span style={{ color: '#20aeea', fontSize: '1.2rem' }}>🔵</span> TCGPlayer</div>
                               {formatarPrecoModal(cartaSelecionada.card_prices?.[0]?.tcgplayer_price)}
                             </div>
-                          </a>
-                          <a href={`https://www.amazon.com/s?k=${encodeURIComponent("Yu-Gi-Oh! " + nomeInglesModal)}&tag=${AMAZON_AFFILIATE_TAG}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                          </div>
+
+                          <div onClick={() => abrirAfiliada(`https://www.amazon.com/s?k=${encodeURIComponent("Yu-Gi-Oh! " + nomeInglesModal)}&tag=${AMAZON_AFFILIATE_TAG}`, 'Amazon', cartaSelecionada.name)} style={{ cursor: 'pointer' }}>
                             <div className="vendor-card">
                               <div className="vendor-name"><span style={{ color: '#ff9900', fontSize: '1.2rem' }}>🅰️</span> Amazon</div>
                               {formatarPrecoModal(cartaSelecionada.card_prices?.[0]?.amazon_price)}
                             </div>
-                          </a>
-                          <a href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(nomeInglesModal + " yugioh")}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                          </div>
+
+                          <div onClick={() => abrirAfiliada(`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(nomeInglesModal + " yugioh")}`, 'eBay', cartaSelecionada.name)} style={{ cursor: 'pointer' }}>
                             <div className="vendor-card">
                               <div className="vendor-name"><span style={{ color: '#e53238', fontSize: '1.2rem' }}>🛍️</span> eBay</div>
                               {formatarPrecoModal(cartaSelecionada.card_prices?.[0]?.ebay_price)}
                             </div>
-                          </a>
-                          <a href={`https://www.cardmarket.com/en/YuGiOh/Products/Search?searchString=${encodeURIComponent(nomeInglesModal)}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                          </div>
+
+                          <div onClick={() => abrirAfiliada(`https://www.cardmarket.com/en/YuGiOh/Products/Search?searchString=${encodeURIComponent(nomeInglesModal)}`, 'Cardmarket', cartaSelecionada.name)} style={{ cursor: 'pointer' }}>
                             <div className="vendor-card">
                               <div className="vendor-name"><span style={{ color: '#0055ff', fontSize: '1.2rem' }}>🇪🇺</span> Cardmarket</div>
                               {formatarPrecoModal(cartaSelecionada.card_prices?.[0]?.cardmarket_price, '€')}
                             </div>
-                          </a>
-                          <a href={`https://www.coolstuffinc.com/page/1088?query=${encodeURIComponent(nomeInglesModal)}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                          </div>
+
+                          <div onClick={() => abrirAfiliada(`https://www.coolstuffinc.com/page/1088?query=${encodeURIComponent(nomeInglesModal)}`, 'CoolStuffInc', cartaSelecionada.name)} style={{ cursor: 'pointer' }}>
                             <div className="vendor-card">
                               <div className="vendor-name"><span style={{ color: '#a55eea', fontSize: '1.2rem' }}>🎲</span> CoolStuffInc</div>
                               {formatarPrecoModal(cartaSelecionada.card_prices?.[0]?.coolstuffinc_price)}
                             </div>
-                          </a>
+                          </div>
                         </div>
 
                         <div className="text-center mt-3 mb-4 p-2 rounded" style={{ background: 'rgba(0, 210, 255, 0.1)', border: '1px solid #00d2ff', borderRadius: '8px' }}>
                           <p className="mb-0" style={{ fontSize: '0.85rem', color: '#b0e0ff' }}>
-                            💡 <strong>Clique em qualquer loja acima</strong> para ser direcionado ao site parceiro e garantir o melhor preço!
+                            💡 <strong>Clique em qualquer loja acima</strong> para ser direcionado ao parceiro e garantir o melhor preço!
                           </p>
                           <p className="mb-0" style={{ fontSize: '0.75rem', color: '#8b949e' }}>
-                            🔗 Você estará apoiando a Greed Store — comissão revertida em melhorias!
+                            🔗 Ao comprar através destes links, estará a apoiar a Greed Store!
                           </p>
                         </div>
 
@@ -505,19 +500,11 @@ export default function Marketplace() {
         </>
       )}
 
-      {/* COMPONENTE DE AVISO (TOAST) EFÊMERO LOCAL */}
+      {/* TOAST EFÊMERO LOCAL */}
       <div style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        background: '#28a745',
-        color: 'white',
-        padding: '10px 20px',
-        borderRadius: '5px',
-        display: mostrarToast ? 'block' : 'none',
-        zIndex: 9999,
-        fontWeight: 'bold',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+        position: 'fixed', top: '20px', right: '20px', background: '#28a745', color: 'white',
+        padding: '10px 20px', borderRadius: '5px', display: mostrarToast ? 'block' : 'none',
+        zIndex: 9999, fontWeight: 'bold', boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
       }}>
         ⭐ Adicionado aos favoritos!
       </div>
