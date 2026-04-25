@@ -7,8 +7,6 @@ import uiReducer from './slices/uiSlice';
 import searchReducer from './slices/searchSlice';
 import decksReducer from './slices/decksSlice';
 import favoritosReducer from './slices/favoritosSlice';
-
-// Nova importação para o rastreamento de afiliados
 import affiliatesReducer from './slices/affiliateSlice';
 
 export const store = configureStore({
