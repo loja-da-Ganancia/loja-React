@@ -198,8 +198,8 @@ export default function Perfil() {
             <h3 className="border-bottom border-secondary pb-2 text-white">📚 Meus Decks</h3>
             <div className="row g-4 mt-2">
               {meusDecks.length === 0 ? (
-                <div className="col-12 text-center text-muted">
-                  Ainda não há decks. <Link to="/decks" className="text-info">Crie um!</Link>
+                <div className="col-12  text-muted">
+                  <span className="text-white">Ainda não há decks.</span> <Link to="/decks" className="text-info">Crie um!</Link>
                 </div>
               ) : (
                 meusDecks.map((deck) => (
