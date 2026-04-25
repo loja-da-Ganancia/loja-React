@@ -134,7 +134,7 @@ export default function Admin() {
               Total de Cartas nos Decks
             </div>
             <div className="card-body d-flex align-items-center justify-content-center">
-              <h2 className="card-title m-0 fw-bold display-4 text-dark">{totalCartas}</h2>
+              <h2 className="card-title m-0 fw-bold display-4 text-white">{totalCartas}</h2>
             </div>
           </div>
         </div>

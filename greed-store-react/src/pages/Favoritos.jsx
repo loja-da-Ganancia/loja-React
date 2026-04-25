@@ -1,4 +1,4 @@
-import React, { useState } from "react"; // Removido o useEffect inútil
+import React, { useState } from "react"; 
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { removerFavoritoGlobal } from "../slices/favoritosSlice";
@@ -123,18 +123,25 @@ export default function Favoritos() {
       {/* MODAL */}
       {modalInfo && (
         <>
-          <div className="modal fade show d-block" tabIndex="-1" onClick={fecharModal} style={{zIndex: 1060}}>
+          <div className="modal fade show d-block" tabIndex="-1" onClick={() => { fecharModal(); setImagemZoom(false); }} style={{zIndex: 1060}}>
             <div className="modal-dialog modal-dialog-centered modal-lg" onClick={(e) => e.stopPropagation()}>
               <div className="modal-content" style={{backgroundColor: '#161b22', border: '1px solid #30363d'}}>
                 <div className="modal-header" style={{borderBottom: '1px solid #30363d'}}>
                   <h5 className="modal-title text-white">Detalhes da Carta</h5>
-                  <button type="button" className="ms-auto" onClick={fecharModal} style={{background: 'transparent', border: 'none', color: 'white', fontSize: '1.8rem', fontWeight: 'bold', cursor: 'pointer', lineHeight: '1', padding: '0 10px'}} aria-label="Fechar">&times;</button>
+                  <button type="button" className="ms-auto" onClick={() => { fecharModal(); setImagemZoom(false); }} style={{background: 'transparent', border: 'none', color: 'white', fontSize: '1.8rem', fontWeight: 'bold', cursor: 'pointer', lineHeight: '1', padding: '0 10px'}} aria-label="Fechar">&times;</button>
                 </div>
                 <div className="modal-body text-center">
                   {carregandoModal && <p className="text-info mt-3">Carregando informações do banco de dados...</p>}
                   <div className="row">
                     <div className="col-md-5 text-center">
-                      <img src={modalInfo.imagem} className={`img-fluid rounded border border-secondary img-zoomable ${imagemZoom ? 'img-zoomed' : ''}`} style={{maxHeight: '400px', objectFit: 'contain'}} title="Clique para dar Zoom" onClick={() => setImagemZoom(!imagemZoom)} alt="Zoom Card" />
+                      <img 
+                        src={modalInfo.imagem} 
+                        className="img-fluid rounded border border-secondary" 
+                        style={{maxHeight: '400px', objectFit: 'contain', cursor: 'zoom-in'}} 
+                        title="Clique para dar Zoom" 
+                        onClick={() => setImagemZoom(true)} 
+                        alt={modalInfo.nome} 
+                      />
                       <p className="mt-2" style={{fontSize: '0.8rem', color: '#8b949e'}}>🔍 Clique na imagem para dar zoom</p>
                     </div>
                     <div className="col-md-7 text-start">
@@ -148,7 +155,35 @@ export default function Favoritos() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show" style={{zIndex: 1055}}></div>
+          
+          {/* Fundo Escuro padrão do Bootstrap para o Modal Normal */}
+          {!imagemZoom && <div className="modal-backdrop fade show" style={{zIndex: 1055}}></div>}
+
+          {/* OVERLAY DE ZOOM GIGANTE (FORA DO MODAL) */}
+          {imagemZoom && (
+            <div 
+              style={{
+                position: 'fixed', 
+                top: 0, 
+                left: 0, 
+                width: '100vw', 
+                height: '100vh',
+                backgroundColor: '#000000',
+                zIndex: 1070, 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                cursor: 'zoom-out'
+              }}
+              onClick={() => setImagemZoom(false)}
+            >
+              <img 
+                src={modalInfo.imagem} 
+                alt={modalInfo.nome}
+                style={{ maxWidth: '100vw', maxHeight: '100vh', objectFit: 'contain' }}
+              />
+            </div>
+          )}
         </>
       )}
     </div>

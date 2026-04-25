@@ -19,8 +19,6 @@ export const store = configureStore({
     search: searchReducer,
     decks: decksReducer,
     favoritos: favoritosReducer,
-    
-    // Acoplamento da gaveta de monitoramento de afiliados
     affiliates: affiliatesReducer,
   },
 });

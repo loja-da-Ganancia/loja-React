@@ -353,6 +353,7 @@ export default function Decks() {
 
       {modalCardInfo && (
         <>
+          {/* Modal Normal da Carta */}
           <div className="modal fade show d-block" tabIndex="-1" onClick={() => { setModalCardInfo(null); setImagemZoom(false); }} style={{zIndex: 1060}}>
             <div className="modal-dialog modal-dialog-centered modal-lg" onClick={(e) => e.stopPropagation()}>
               <div className="modal-content" style={{backgroundColor: '#161b22', border: '1px solid #30363d'}}>
@@ -363,7 +364,16 @@ export default function Decks() {
                 <div className="modal-body text-center">
                   <div className="row">
                     <div className="col-md-5 text-center">
-                      <img src={modalCardInfo.card_images ? modalCardInfo.card_images[0].image_url : modalCardInfo.imagem} className={`img-fluid rounded border border-secondary img-zoomable ${imagemZoom ? 'img-zoomed' : ''}`} style={{maxHeight: '400px', objectFit: 'contain'}} title="Clique para dar Zoom" onClick={() => setImagemZoom(!imagemZoom)} alt="Zoom Card" />
+                      <div style={{ position: 'static' }}>
+                        <img 
+                          src={modalCardInfo.card_images ? modalCardInfo.card_images[0].image_url : modalCardInfo.imagem} 
+                          className="img-fluid rounded border border-secondary" 
+                          style={{boxShadow: '0 4px 15px rgba(0,0,0,0.5)', maxHeight: '400px', objectFit: 'contain', cursor: 'zoom-in'}} 
+                          title="Clique para dar Zoom" 
+                          onClick={() => setImagemZoom(true)} 
+                          alt={modalCardInfo.name || modalCardInfo.nome} 
+                        />
+                      </div>
                       <p className="mt-2" style={{fontSize: '0.8rem', color: '#8b949e'}}>🔍 Clique na imagem para dar zoom</p>
                     </div>
                     <div className="col-md-7 text-start">
@@ -377,7 +387,35 @@ export default function Decks() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show" style={{zIndex: 1055}}></div>
+          
+          {/* O Fundo Escuro padrão do Bootstrap para o Modal Normal */}
+          {!imagemZoom && <div className="modal-backdrop fade show" style={{zIndex: 1055}}></div>}
+
+          {/* OVERLAY DE ZOOM GIGANTE (FORA DO MODAL) */}
+          {imagemZoom && (
+            <div 
+              style={{
+                position: 'fixed', 
+                top: 0, 
+                left: 0, 
+                width: '100vw', 
+                height: '100vh',
+                backgroundColor: '#000000', // Fundo 100% preto
+                zIndex: 1070, // z-index maior que o do modal-dialog
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                cursor: 'zoom-out'
+              }}
+              onClick={() => setImagemZoom(false)}
+            >
+              <img 
+                src={modalCardInfo.card_images ? modalCardInfo.card_images[0].image_url : modalCardInfo.imagem} 
+                alt={modalCardInfo.name || modalCardInfo.nome}
+                style={{ maxWidth: '100vw', maxHeight: '100vh', objectFit: 'contain' }}
+              />
+            </div>
+          )}
         </>
       )}
 

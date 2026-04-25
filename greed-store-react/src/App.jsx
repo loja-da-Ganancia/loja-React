@@ -33,26 +33,30 @@ import ResetSenha from "./pages/ResetSenha";
 
 function App() {
     return (
-        // O Provider é literalmente o cabo. Ele envolve o aplicativo inteiro 
-        // e garante que qualquer página lá dentro consiga acessar os dados do usuário.
         <Provider store={store}>
             <BrowserRouter>
-                <Navbar />
+                {/* Esta div é o segredo para o footer funcionar */}
+                <div className="d-flex flex-column min-vh-100">
+                    
+                    <Navbar />
 
-                <Routes>
-                    <Route path="/" element={<Home/>} />
-                    <Route path="/marketplace" element={<Marketplace />} />
-                    <Route path="/decks" element={<Decks />} />
-                    <Route path="/comunidade" element={<Comunidade />} />
-                    <Route path="/favoritos" element={<Favoritos />} />
-                    <Route path="/admin" element={<Admin />} />
-                    <Route path="/perfil" element={<Perfil />} />
-                    <Route path="/contas" element={<Contas />} />
-                    <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
-                    <Route path="/reset" element={<ResetSenha />} />
-                </Routes>
+                    {/* O conteúdo das páginas fica aqui no meio */}
+                    <Routes>
+                        <Route path="/" element={<Home/>} />
+                        <Route path="/marketplace" element={<Marketplace />} />
+                        <Route path="/decks" element={<Decks />} />
+                        <Route path="/comunidade" element={<Comunidade />} />
+                        <Route path="/favoritos" element={<Favoritos />} />
+                        <Route path="/admin" element={<Admin />} />
+                        <Route path="/perfil" element={<Perfil />} />
+                        <Route path="/contas" element={<Contas />} />
+                        <Route path="/esqueci-senha" element={<EsqueciSenhaPage />} />
+                        <Route path="/reset" element={<ResetSenha />} />
+                    </Routes>
 
-                <Footer />
+                    <Footer />
+                    
+                </div>
             </BrowserRouter>
         </Provider>
     );

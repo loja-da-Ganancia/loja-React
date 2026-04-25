@@ -2,34 +2,25 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { adicionarFavoritoGlobal } from "../slices/favoritosSlice";
-import { useAffiliateTracking } from "../hooks/userAffiliateTracking"; // <-- Importação do novo Hook
+import { useAffiliateTracking } from "../hooks/userAffiliateTracking"; 
 
 const CARTAS_POR_PAGINA = 15;
 const AMAZON_AFFILIATE_TAG = '3153150d-20';
 
-// Função auxiliar encapsulada fora do componente para evitar recriação de escopo em renderizações sucessivas.
 function obterPreco(carta) {
   if (!carta.card_prices || !carta.card_prices[0]) return 0.00;
   return parseFloat(carta.card_prices[0].tcgplayer_price || 0);
 }
 
 export default function Marketplace() {
-  // ====================================================
-  // 1. INTEGRAÇÃO DE ESTADO GLOBAL (Redux) E ROTEAMENTO
-  // ====================================================
   const dispatch = useDispatch();
   const navigate = useNavigate(); 
   
-  // Extração reativa da lista de favoritos e do utilizador atual do estado global
   const favoritos = useSelector((state) => state.favoritos.items);
   const currentUser = useSelector((state) => state.user.currentUser); 
 
-  // Inicialização do sistema de rastreamento de afiliados
   const { registrarClique } = useAffiliateTracking();
 
-  // ====================================================
-  // 2. ESTADOS LOCAIS (Dados e Filtros)
-  // ====================================================
   const [todasAsCartas, setTodasAsCartas] = useState([]);
   const [cartasFiltradas, setCartasFiltradas] = useState([]);
   const [paginaAtual, setPaginaAtual] = useState(0);
@@ -49,21 +40,11 @@ export default function Marketplace() {
 
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
 
-  // ====================================================
-  // 3. ESTADOS LOCAIS (Modal de Detalhes)
-  // ====================================================
   const [cartaSelecionada, setCartaSelecionada] = useState(null);
   const [nomeInglesModal, setNomeInglesModal] = useState("");
   const [carregandoModal, setCarregandoModal] = useState(false);
   const [imagemZoom, setImagemZoom] = useState(false);
 
-  // ====================================================
-  // 4. REQUISIÇÕES, LÓGICA DE NEGÓCIO E AFILIADOS
-  // ====================================================
-  
-  /**
-   * Regista o clique na store global e abre o site parceiro.
-   */
   const abrirAfiliada = (url, afiliada, nomeCarta) => {
     const nomeUsuario = currentUser ? currentUser.username : 'Anônimo';
     registrarClique(afiliada, nomeCarta, nomeUsuario);
@@ -132,9 +113,6 @@ export default function Marketplace() {
     setPaginaAtual(0);
   }, [filtroPrecoMin, filtroPrecoMax, ocultarSemPreco]); 
 
-  // ====================================================
-  // 5. CICLO DE VIDA (Hooks)
-  // ====================================================
   useEffect(() => {
     const timeoutPesquisa = setTimeout(() => {
       buscarCartasAPI();
@@ -148,9 +126,6 @@ export default function Marketplace() {
     aplicarFiltroDePrecoLocal(todasAsCartas);
   }, [todasAsCartas, aplicarFiltroDePrecoLocal]);
 
-  // ====================================================
-  // 6. FUNÇÕES INTERATIVAS
-  // ====================================================
   function resetarFiltros() {
     setTermoPesquisa("");
     setFiltroTipo("");
@@ -231,11 +206,8 @@ export default function Marketplace() {
     return <span className="vendor-price indisponivel">Fora de estoque</span>;
   }
 
-  // ====================================================
-  // 7. RENDERIZAÇÃO DA INTERFACE
-  // ====================================================
   return (
-    <div>
+    <main className="flex-grow-1">
       {/* BARRA DE PESQUISA */}
       <div className="barra-pesquisa">
         <div className="container">
@@ -259,7 +231,7 @@ export default function Marketplace() {
         </div>
       </div>
 
-      <div className="container mt-4">
+      <div className="container mt-4 mb-5">
         <div className="row g-4">
           
           {/* SIDEBAR DE FILTROS */}
@@ -331,7 +303,7 @@ export default function Marketplace() {
           </aside>
 
           {/* LISTAGEM DE CARTAS */}
-          <main className="col-lg-9">
+          <div className="col-lg-9">
             <div className="row g-4">
               {carregando && (
                 <h4 className='text-center w-100 text-info mt-5'>A procurar na base de dados...</h4>
@@ -385,13 +357,14 @@ export default function Marketplace() {
                 </div>
               </nav>
             )}
-          </main>
+          </div>
         </div>
       </div>
 
       {/* MODAL DETALHES */}
       {cartaSelecionada && (
         <>
+          {/* Modal Normal da Carta */}
           <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1" onClick={fecharModal}>
             <div className="modal-dialog modal-lg" onClick={(e) => e.stopPropagation()}>
               <div className="modal-content">
@@ -401,7 +374,6 @@ export default function Marketplace() {
                   <button 
                     type="button" className="ms-auto" onClick={fecharModal}
                     style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '1.8rem', fontWeight: 'bold', cursor: 'pointer', lineHeight: '1', padding: '0 10px' }}
-                    aria-label="Fechar"
                   >
                     &times;
                   </button>
@@ -417,18 +389,19 @@ export default function Marketplace() {
                     <div className="row">
                       <div className="col-md-5 text-center mb-4">
                         <div style={{ position: 'static' }}>
-                          {imagemZoom && <div className="overlay" onClick={() => setImagemZoom(false)} />}
+                          {/* Botão de abrir o Zoom Gigante */}
                           <img
                             src={cartaSelecionada.card_images[0].image_url}
-                            className={`img-fluid rounded border border-secondary ${imagemZoom ? 'img-zoomed' : ''}`}
+                            className="img-fluid rounded border border-secondary"
                             alt={cartaSelecionada.name}
-                            style={{ boxShadow: '0 4px 15px rgba(0,0,0,0.5)', maxHeight: '400px', objectFit: 'contain', cursor: 'pointer' }}
+                            style={{ boxShadow: '0 4px 15px rgba(0,0,0,0.5)', maxHeight: '400px', objectFit: 'contain', cursor: 'zoom-in' }}
                             title="Clique para dar Zoom"
-                            onClick={() => setImagemZoom(!imagemZoom)}
+                            onClick={() => setImagemZoom(true)}
                           />
                         </div>
                         <p className="mt-2" style={{ fontSize: '0.8rem', color: '#8b949e' }}>🔍 Clique na imagem para dar zoom</p>
                       </div>
+                      
                       <div className="col-md-7">
                         <h3 className="fw-bold text-white border-bottom border-secondary pb-2 mb-3">{cartaSelecionada.name}</h3>
 
@@ -441,7 +414,6 @@ export default function Marketplace() {
 
                         <h5 className="text-info fw-bold mb-3">🛒 Comparar Ofertas</h5>
                         <div className="vendor-list mb-4">
-                          {/* Integramos o rastreamento Redux em cada link das lojas parceiras */}
                           <div onClick={() => abrirAfiliada(`https://www.tcgplayer.com/search/yugioh/product?q=${encodeURIComponent(nomeInglesModal)}`, 'TCGPlayer', cartaSelecionada.name)} style={{ cursor: 'pointer' }}>
                             <div className="vendor-card">
                               <div className="vendor-name"><span style={{ color: '#20aeea', fontSize: '1.2rem' }}>🔵</span> TCGPlayer</div>
@@ -469,21 +441,11 @@ export default function Marketplace() {
                               {formatarPrecoModal(cartaSelecionada.card_prices?.[0]?.cardmarket_price, '€')}
                             </div>
                           </div>
-
-                          <div onClick={() => abrirAfiliada(`https://www.coolstuffinc.com/page/1088?query=${encodeURIComponent(nomeInglesModal)}`, 'CoolStuffInc', cartaSelecionada.name)} style={{ cursor: 'pointer' }}>
-                            <div className="vendor-card">
-                              <div className="vendor-name"><span style={{ color: '#a55eea', fontSize: '1.2rem' }}>🎲</span> CoolStuffInc</div>
-                              {formatarPrecoModal(cartaSelecionada.card_prices?.[0]?.coolstuffinc_price)}
-                            </div>
-                          </div>
                         </div>
 
                         <div className="text-center mt-3 mb-4 p-2 rounded" style={{ background: 'rgba(0, 210, 255, 0.1)', border: '1px solid #00d2ff', borderRadius: '8px' }}>
                           <p className="mb-0" style={{ fontSize: '0.85rem', color: '#b0e0ff' }}>
                             💡 <strong>Clique em qualquer loja acima</strong> para ser direcionado ao parceiro e garantir o melhor preço!
-                          </p>
-                          <p className="mb-0" style={{ fontSize: '0.75rem', color: '#8b949e' }}>
-                            🔗 Ao comprar através destes links, estará a apoiar a Greed Store!
                           </p>
                         </div>
 
@@ -496,11 +458,42 @@ export default function Marketplace() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show"></div>
+          
+          {/* O Fundo Escuro padrão do Bootstrap para o Modal Normal */}
+          {!imagemZoom && <div className="modal-backdrop fade show"></div>}
+
+          {/* ==========================================================
+              OVERLAY DE ZOOM GIGANTE (FORA DO MODAL)
+              Como este elemento está do lado de fora do .modal-dialog, 
+              ele não é afetado pelo bug de transform do Bootstrap!
+              ========================================================== */}
+          {imagemZoom && (
+            <div 
+              style={{
+                position: 'fixed', 
+                top: 0, 
+                left: 0, 
+                width: '100vw', 
+                height: '100vh',
+                backgroundColor: '#000000', // Fundo 100% preto
+                zIndex: 1060, // z-index maior que o do Bootstrap modal
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                cursor: 'zoom-out'
+              }}
+              onClick={() => setImagemZoom(false)}
+            >
+              <img 
+                src={cartaSelecionada.card_images[0].image_url} 
+                alt={cartaSelecionada.name}
+                style={{ maxWidth: '100vw', maxHeight: '100vh', objectFit: 'contain' }}
+              />
+            </div>
+          )}
         </>
       )}
 
-      {/* TOAST EFÊMERO LOCAL */}
       <div style={{
         position: 'fixed', top: '20px', right: '20px', background: '#28a745', color: 'white',
         padding: '10px 20px', borderRadius: '5px', display: mostrarToast ? 'block' : 'none',
@@ -508,6 +501,6 @@ export default function Marketplace() {
       }}>
         ⭐ Adicionado aos favoritos!
       </div>
-    </div>
+    </main>
   );
 }

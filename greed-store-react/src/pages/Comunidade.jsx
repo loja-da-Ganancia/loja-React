@@ -1,4 +1,4 @@
-import React, { useState } from "react"; // Removido useEffect inútil
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { addPost, deletePost, editPost } from "../slices/postSlice";
@@ -351,7 +351,14 @@ export default function Comunidade() {
                   {carregandoCarta && <p className="text-info mt-3">Carregando informações...</p>}
                   <div className="row">
                     <div className="col-md-5 text-center">
-                      <img src={modalCartaInfo.imagem} className={`img-fluid rounded border border-secondary img-zoomable ${imagemZoom ? 'img-zoomed' : ''}`} style={{ maxHeight: '400px', objectFit: 'contain' }} title="Clique para dar Zoom" onClick={() => setImagemZoom(!imagemZoom)} alt="Zoom Card" />
+                      <img 
+                        src={modalCartaInfo.imagem} 
+                        className="img-fluid rounded border border-secondary" 
+                        style={{ maxHeight: '400px', objectFit: 'contain', cursor: 'zoom-in' }} 
+                        title="Clique para dar Zoom" 
+                        onClick={() => setImagemZoom(true)} 
+                        alt={modalCartaInfo.nome} 
+                      />
                       <p className="mt-2" style={{ fontSize: '0.8rem', color: '#8b949e' }}>🔍 Clique na imagem para dar zoom</p>
                     </div>
                     <div className="col-md-7 text-start">
@@ -365,7 +372,35 @@ export default function Comunidade() {
               </div>
             </div>
           </div>
-          <div className="modal-backdrop fade show" style={{ zIndex: 1055 }}></div>
+          
+          {/* Fundo Escuro padrão do Bootstrap para o Modal Normal */}
+          {!imagemZoom && <div className="modal-backdrop fade show" style={{ zIndex: 1055 }}></div>}
+
+          {/* OVERLAY DE ZOOM GIGANTE (FORA DO MODAL) */}
+          {imagemZoom && (
+            <div 
+              style={{
+                position: 'fixed', 
+                top: 0, 
+                left: 0, 
+                width: '100vw', 
+                height: '100vh',
+                backgroundColor: '#000000',
+                zIndex: 1070, 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                cursor: 'zoom-out'
+              }}
+              onClick={() => setImagemZoom(false)}
+            >
+              <img 
+                src={modalCartaInfo.imagem} 
+                alt={modalCartaInfo.nome}
+                style={{ maxWidth: '100vw', maxHeight: '100vh', objectFit: 'contain' }}
+              />
+            </div>
+          )}
         </>
       )}
 
