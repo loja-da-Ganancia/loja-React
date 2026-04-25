@@ -35,7 +35,6 @@ function App() {
     return (
         <Provider store={store}>
             <BrowserRouter>
-                {/* Esta div é o segredo para o footer funcionar */}
                 <div className="d-flex flex-column min-vh-100">
                     
                     <Navbar />
