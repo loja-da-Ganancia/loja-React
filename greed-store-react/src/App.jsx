@@ -34,7 +34,7 @@ function App() {
     return (
         <Provider store={store}>
             <BrowserRouter>
-                {/*Deixa o footer sempre no final do conteiner*/}
+                {/*Deixa o footer sempre no final do conteiner, dando um espaço no meio se necessário*/}
                 <div className="d-flex flex-column min-vh-100">
                     
                     <Navbar />
