@@ -33,7 +33,7 @@ import ResetSenha from "./pages/ResetSenha";
 function App() {
     return (
         <Provider store={store}>
-            <BrowserRouter>
+            <BrowserRouter basename='/loja-React'>
                 {/*Deixa o footer sempre no final do conteiner, dando um espaço no meio se necessário*/}
                 <div className="d-flex flex-column min-vh-100">
                     
