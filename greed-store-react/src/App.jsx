@@ -5,8 +5,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 // IMPORTAÇÕES DO REDUX (O Cabo de Força)
 // ==========================================================
 import { Provider } from 'react-redux';
-// Puxa a bateria (store) que você criou no passo anterior.
-// Se o arquivo store.js estiver em outra pasta, é só ajustar este caminho.
+
 import { store } from './store'; 
 
 // componentes
