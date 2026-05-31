@@ -1,0 +1,89 @@
+/*Estilos gerais de todo o site*/
+
+body {
+            margin: 0 !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            background-color: #0d1117  !important;
+            color: #F2F3F4 !important;
+        }
+
+.logo-nav-bar{
+            width: 45px;
+        }
+
+/*Fim dos estilos gerais de todo o site*/
+
+/*Início de Estilos da Página Home*/
+.banner-home {
+            position: relative;
+            padding-bottom: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+.textoBanner {
+            margin: 60px auto 20px auto; 
+            font-size: 4rem;
+            text-align: center;
+            width: fit-content;
+            padding: 20px;
+        }      
+
+.textoIntroducao {
+            margin: 0 auto 50px auto;
+            font-size: 1.3rem; 
+            text-align: center;
+            padding: 10px 20px;
+            width: fit-content;
+            line-height: 1.8;
+        }
+.quick-action-card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-decoration: none;
+            color: #F2F3F4;
+        }
+.quick-action-card:hover {
+            transform: translateY(-10px);
+            border-color: #00d2ff;
+            box-shadow: 0 10px 20px rgba(0, 210, 255, 0.15);
+            color: #ffffff;
+        }
+.quick-action-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+/* Títulos de Seção Customizados */
+.section-title {
+            background: linear-gradient(to top left, #fffb00, #ffa600, #800080);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            font-size: 2.5rem;
+        }
+
+        /* Redes Sociais unificadas com o visual do site */
+#caixaRedesSociais {
+            background-color: #161b22;
+            padding: 40px 20px;
+            border-radius: 15px;
+            border: 1px solid #30363d;
+        }
+
+        /* Responsividade do texto do banner */
+@media (max-width: 768px) {
+            .textoBanner { font-size: 2.5rem; }
+            .textoIntroducao { font-size: 1.1rem; text-align: left;}
+        }
+
+/*Fim de estilos da página home*/
+
