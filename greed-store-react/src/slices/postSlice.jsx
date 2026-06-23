@@ -52,9 +52,9 @@ export const fetchPostsThunk = () => async (dispatch) => {
         id: p._id,
         title: p.title,
         content: p.content,
-        // Caso o backend use populate('author', 'username')
         author: p.author?.username || p.author || 'Anônimo', 
-        createdAt: p.createdAt
+        createdAt: p.createdAt,
+        deckId: p.deckId || p.deck // 👉 ADICIONADO: Mantém o elo de ligação
       }));
       
       dispatch(setPostsCarregados(postsFormatados));
@@ -88,8 +88,9 @@ export const createPostThunk = (postData) => async (dispatch, getState) => {
         id: savedPost._id,
         title: savedPost.title,
         content: savedPost.content,
-        author: currentUser.username, // Usa o nome de quem está logado
-        createdAt: savedPost.createdAt
+        author: currentUser.username, 
+        createdAt: savedPost.createdAt,
+        deckId: savedPost.deckId || savedPost.deck // 👉 ADICIONADO: Mantém o elo de ligação
       };
       
       dispatch(addPostLocal(postFormatado));

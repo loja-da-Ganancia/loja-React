@@ -31,7 +31,6 @@ export default function Comunidade() {
   const [carregandoCarta, setCarregandoCarta] = useState(false);
   const [imagemZoom, setImagemZoom] = useState(false);
 
-  
   const [postParaRemover, setPostParaRemover] = useState(null);
   const toastMsg = useSelector((state) => state.ui.toastMsg);
 
@@ -40,7 +39,7 @@ export default function Comunidade() {
   // ====================================================
   useEffect(() => {
     dispatch(fetchPostsThunk());
-    dispatch(fetchDecksThunk());
+    dispatch(fetchDecksThunk()); // Puxa sempre as edições mais recentes do banco
   }, [dispatch]);
 
   // ====================================================
@@ -65,13 +64,13 @@ export default function Comunidade() {
   }
 
   // ====================================================
-  // 3. VARIÁVEIS DERIVADAS (Usuário Logado)
+  // 3. VARIÁVEIS DERIVADAS
   // ====================================================
   const meusDecks = decks.filter((d) => d.owner === currentUser.username);
   const isUserAdmin = currentUser.role === 'admin';
 
   // ====================================================
-  // 4. LÓGICA DE POSTAGEM VIA REDUX (CONECTADA AO MONGO)
+  // 4. LÓGICA DE POSTAGEM
   // ====================================================
   function abrirModalNovoPost() {
     setPostDeckId("");
@@ -86,7 +85,8 @@ export default function Comunidade() {
       return;
     }
 
-    const deckSelecionado = decks.find((d) => d.id === postDeckId || d._id === postDeckId);
+    // Trava de segurança para criação
+    const deckSelecionado = decks.find((d) => String(d.id || d._id) === String(postDeckId));
     const tituloPost = deckSelecionado ? `Estratégia: ${deckSelecionado.nome}` : "Post de Comunidade";
 
     const novoPostData = {
@@ -99,9 +99,6 @@ export default function Comunidade() {
     fecharModais();
   }
 
-  // ====================================================
-  // LÓGICA DE EXCLUSÃO (ATUALIZADA)
-  // ====================================================
   function solicitarRemocaoPost(postId) {
     setPostParaRemover(postId);
   }
@@ -133,7 +130,8 @@ export default function Comunidade() {
   // 5. COMPARTILHAMENTO & VISUALIZAÇÃO
   // ====================================================
   function compartilharPost(post) {
-    const deck = decks.find((d) => d.id === post.deckId || d._id === post.deckId);
+    const targetDeckId = post.deckId || post.deck;
+    const deck = decks.find((d) => targetDeckId && String(d.id || d._id) === String(targetDeckId));
     if (!deck) return;
 
     const counts = {};
@@ -154,6 +152,7 @@ export default function Comunidade() {
       fecharModais(); 
     });
   }
+
   function compartilharRedeSocial(rede) {
     if (!shareData) return;
     const textEnc = encodeURIComponent(shareData.text);
@@ -165,7 +164,7 @@ export default function Comunidade() {
   }
 
   function abrirVisualizacaoDeckComunidade(deckId) {
-    const deck = decks.find((d) => d.id === deckId || d._id === deckId);
+    const deck = decks.find((d) => deckId && String(d.id || d._id) === String(deckId));
     if (deck) setModalDeckCompleto(deck);
   }
 
@@ -199,7 +198,7 @@ export default function Comunidade() {
     setModalDeckCompleto(null); 
     setModalCartaInfo(null); 
     setImagemZoom(false);
-    setPostParaRemover(null); // Limpa caso o usuário feche clicando fora
+    setPostParaRemover(null);
   }
 
   // ====================================================
@@ -219,14 +218,20 @@ export default function Comunidade() {
           ) : (
             posts.map((post) => {
               const currentPostId = post.id || post._id;
-              const deck = decks.find((d) => d.id === post.deckId || d._id === post.deckId);
-              if (!deck) return null;
+              
+              // 👉 A MÁGICA ACONTECE AQUI: A postagem busca o deck em tempo real!
+              // Se o deck for atualizado no banco, a versão fresca renderiza aqui instantaneamente.
+              const targetDeckId = post.deckId || post.deck;
+              const deck = decks.find((d) => targetDeckId && String(d.id || d._id) === String(targetDeckId));
+              if (!deck) return null; // Aborta se o deck real não for encontrado
 
               const autorUser = users.find((u) => u.username === post.author);
               const temFoto = autorUser && autorUser.profilePicUrl;
               const avatarStyle = temFoto ? { backgroundImage: `url('${autorUser.profilePicUrl}')`, backgroundSize: "cover", backgroundPosition: "center" } : {};
               const avatarContent = !temFoto ? String(post.author).charAt(0).toUpperCase() : "";
+              
               const podeEditar = (currentUser.username === post.author) || isUserAdmin;
+              const cartasPreview = deck.cartas ? deck.cartas.slice(0, 3) : [];
 
               return (
                 <div className="post-card p-4 mb-4 rounded-3 shadow-sm" key={currentPostId} style={{ backgroundColor: '#161b22', border: '1px solid #30363d' }}>
@@ -242,7 +247,25 @@ export default function Comunidade() {
                     </div>
                     <div><button className="btn btn-sm btn-outline-light" onClick={() => compartilharPost(post)} title="Compartilhar nas Redes">🔗</button></div>
                   </div>
+                  
                   <p style={{ whiteSpace: 'pre-wrap', fontSize: '1.05rem', lineHeight: '1.6', color: '#F2F3F4' }}>{post.content}</p>
+                  
+                  <div className="d-flex gap-2 mt-3 mb-3 p-2 rounded" style={{ backgroundColor: '#0d1117', border: '1px solid #30363d' }}>
+                    {cartasPreview.map((carta, idx) => (
+                      <img 
+                        key={idx} 
+                        src={carta.imagem} 
+                        alt={carta.nome} 
+                        style={{ width: '60px', borderRadius: '5px', objectFit: 'contain' }} 
+                      />
+                    ))}
+                    {deck.cartas.length > 3 && (
+                      <div className="d-flex align-items-center ms-2 text-light small fw-bold">
+                        +{deck.cartas.length - 3} cartas
+                      </div>
+                    )}
+                  </div>
+
                   <div className="d-flex justify-content-between mt-4 align-items-center flex-wrap gap-2">
                     <div>
                       {podeEditar && (
@@ -261,9 +284,7 @@ export default function Comunidade() {
         </div>
       </div>
 
-      {/* ==================================================== */}
-      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO (NOVO) */}
-      {/* ==================================================== */}
+      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
       {postParaRemover && (
         <>
           <div className="modal fade show d-block" tabIndex="-1" onClick={cancelarRemocaoPost} style={{zIndex: 1080}}>
@@ -278,12 +299,8 @@ export default function Comunidade() {
                   <strong className="text-danger">Essa ação não pode ser desfeita.</strong>
                 </p>
                 <div className="d-flex justify-content-center gap-3 mt-4">
-                  <button className="btn btn-outline-secondary fw-bold px-4" onClick={cancelarRemocaoPost}>
-                    Cancelar
-                  </button>
-                  <button className="btn btn-danger fw-bold px-4 shadow" onClick={confirmarRemocaoPost}>
-                    Sim, Excluir
-                  </button>
+                  <button className="btn btn-outline-secondary fw-bold px-4" onClick={cancelarRemocaoPost}>Cancelar</button>
+                  <button className="btn btn-danger fw-bold px-4 shadow" onClick={confirmarRemocaoPost}>Sim, Excluir</button>
                 </div>
               </div>
             </div>
@@ -292,7 +309,7 @@ export default function Comunidade() {
         </>
       )}
 
-      {/* MODAIS EXISTENTES */}
+      {/* MODAIS COMPLEMENTARES */}
       {modalNovoPost && (
         <>
           <div className="modal fade show d-block" tabIndex="-1" onClick={fecharModais}>
@@ -474,7 +491,6 @@ export default function Comunidade() {
         </>
       )}
 
-      
       <div style={{
         position: 'fixed', 
         bottom: '30px', 

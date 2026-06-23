@@ -1,15 +1,8 @@
-import dotenv from "dotenv";
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-dotenv.config({ path: join(__dirname, '../../.env') });
-
+import 'dotenv/config'; // Garante que o .env é lido IMEDIATAMENTE antes do resto
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import connectDB from './config/database.js'; // Note a extensão .js no final
+import connectDB from './config/database.js';
 
 import dns from 'dns';
 dns.setServers(['8.8.8.8', '8.8.4.4']);
@@ -20,6 +13,7 @@ import decksRouter from './routes/decks.js';
 import postsRouter from './routes/posts.js';
 import clicksRouter from './routes/clicks.js';
 import favoritesRouter from './routes/favorites.js';
+
 
 const app = express();
 app.disable('x-powered-by');
