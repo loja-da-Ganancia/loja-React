@@ -1,0 +1,78 @@
+/* Comunidade.css - Feed da Greed Store */
+
+/* Barra de rolagem escura para modais e textareas */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #0d1117; }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: #00d2ff; }
+
+/* Remove fundos brancos de formulários */
+.form-control, .form-select {
+    background-color: #0d1117 !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+}
+.form-control:focus, .form-select:focus {
+    background-color: #161b22 !important;
+    color: #ffffff !important;
+    border-color: #00d2ff !important;
+    box-shadow: 0 0 5px rgba(0, 210, 255, 0.5) !important;
+}
+
+/* Estilo dos Cards de Post */
+.post-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    transition: transform 0.2s;
+    color: #F2F3F4;
+}
+.post-card:hover { 
+    border-color: #00d2ff; 
+    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.1); 
+}
+
+/* Foto do Autor Dinâmica */
+.author-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #00d2ff;
+    background-color: #0d1117;
+}
+
+/* ZOOM NA CARTA (Padrão Greed Store Centralizado) */
+.img-zoomable {
+    transition: all 0.3s ease-in-out;
+    cursor: zoom-in;
+    position: relative;
+    z-index: 1040;
+}
+
+.img-zoomable:hover {
+    transform: scale(1.03);
+}
+
+.img-zoomed {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important; 
+    max-height: 90vh !important; 
+    max-width: 95vw !important;  
+    width: auto !important;
+    height: auto !important;
+    z-index: 9999 !important; 
+    box-shadow: 0 20px 80px rgba(0,0,0,0.95) !important; 
+    cursor: zoom-out;
+    border-radius: 10px;
+    background-color: #0d1117; 
+}
+
+/* Modal Hover no Deck Fullscreen */
+.card-item:hover {
+    border-color: #00d2ff !important;
+    transform: translateY(-2px);
+}
